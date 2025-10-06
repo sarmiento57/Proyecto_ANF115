@@ -22,13 +22,25 @@ Este proyecto tiene como objetivo construir una aplicación web que permita:
 ### 1️⃣ Clonar el repositorio
 
 ```bash
+# 🔹 1. Clonar el repositorio
 git clone https://github.com/sarmiento57/Proyecto_ANF115.git
-cd <nombre-del-repo>
+cd Proyecto_ANF115
 
-### 2️⃣ Crear entorno virtual y activarlo
-python -m venv venv
-# Windows
+# 🔹 2. Crear entorno virtual
+py -m venv venv
+
+# 🔹 3. Activar entorno virtual
 venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
+# (En Linux/Mac usar: source venv/bin/activate)
+
+# 🔹 4. Aplicar migraciones
+py manage.py makemigrations
+py manage.py migrate
+
+# 🔹 5. Iniciar el servidor local
+py manage.py runserver
+
+# 🔹 6. Abrir el navegador
+# 👉 http://127.0.0.1:8000/
+
 
