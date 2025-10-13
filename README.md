@@ -33,14 +33,17 @@ py -m venv venv
 venv\Scripts\activate
 # (En Linux/Mac usar: source venv/bin/activate)
 
-# 🔹 4. Aplicar migraciones
+# 🔹 4. Instalar librerias
+pip install -r requirements.txt
+
+# 🔹 5. Aplicar migraciones
 py manage.py makemigrations
 py manage.py migrate
 
-# 🔹 5. Iniciar el servidor local
+# 🔹 6. Iniciar el servidor local
 py manage.py runserver
 
-# 🔹 6. Abrir el navegador
+# 🔹 7. Abrir el navegador
 # 👉 http://127.0.0.1:8000/
 
 
