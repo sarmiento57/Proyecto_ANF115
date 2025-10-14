@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playwrite+US+Modern:wght@400;600&display=swap');
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+.custom-font{
+  font-family: 'Playwrite US Modern', serif;
+}
+
+/* Or only change the font of the navbar brand */
+.navbar-brand {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600; /* optional */
+}
+
+
+.custom-white {
+  background-color: #d8dee9 !important; /* White background */
+}
+.custom-purple {
+  background-color: #5e81ac !important; /* Darker shade for hover effect */
+}
