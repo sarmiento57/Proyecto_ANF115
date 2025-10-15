@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
+    path('stela/accounts/', include('django.contrib.auth.urls')),
     path("stela/", include("stela.urls")),
     path('admin/', admin.site.urls),
 ]
