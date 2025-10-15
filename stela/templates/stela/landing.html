@@ -15,7 +15,8 @@
     {% block content %}
     <div>
         <header>
-            <nav class="navbar navbar-expand-lg custom-purple shadow-sm">
+            <nav class="navbar navbar-expand-lg custom-purple shadow-sm fixed-top"
+                style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
                 <div class="container-fluid">
                     <a class="navbar-brand d-flex align-items-center" href="#">
                         <img src="{% static 'img/logo.svg' %}" alt="Logo de Stela" class="me-2"
@@ -28,32 +29,100 @@
                     </div>
                 </div>
             </nav>
-            <div class="container-fluid p-5 rounded shadow-sm custom-white bg-purple">
-                <div class="row align-items-center">
-                    <!-- Columna izquierda: Texto -->
-                    <div class="col-md-6 text-center text-md-start mb-4 mb-md-0">
-                        <h2 class="display-4 custom-font">Estima el FUTURO</h2>
-                        <p class="display-6 custom-font">donde quiera que vayas.</p>
-                        <p class="lead">Tu herramienta para mantenerte competitivo en el mercado</p>
-                        <a href="#" class="btn btn-lg btn-light mt-3">Comenzar Ahora</a>
-                    </div>
+        </header>
+        <div class="container-fluid p-5 rounded shadow-sm custom-white bg-purple">
+            <div class="row align-items-center">
+                <!-- Columna izquierda: Texto -->
+                <div class="col-md-6 text-center text-md-start mb-4 mb-md-0">
+                    <h2 class="display-4 custom-font">Estima el FUTURO</h2>
+                    <p class="display-6 custom-font">donde quiera que vayas.</p>
+                    <p class="lead">Tu herramienta para mantenerte competitivo en el mercado</p>
+                    <a href="#" class="btn btn-lg btn-success mt-3">Comenzar Ahora</a>
+                </div>
 
-                    <!-- Columna derecha: Imagen -->
-                    <div class="col-md-6 text-center">
+                <!-- Columna derecha: Imagen -->
+                <div class="col-md-6 text-center">
+                    <img src="{% static 'img/logo.svg' %}" alt="Imagen de bienvenida" class="img-fluid">
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid p-5 rounded shadow-sm custom-black bg-purple">
+            <div class="row align-items-center">
+                <!-- Columna izquierda: Texto -->
+                <div class="row align-items-start">
+                    <div class="col-md-4 text-center">
                         <img src="{% static 'img/logo.svg' %}" alt="Imagen de bienvenida" class="img-fluid">
                     </div>
+                    <div class="col-md-8 text-center text-md-start mb-4 mb-md-0">
+                        <h2 class="display-6 custom-font mb-4">Comparación de Ratios Financieros Sectoriales</h2>
+                        <p class="lead mb-3">Compara el desempeño de tu empresa con el <strong>promedio de la industria</strong> en
+                            El Salvador. La clasificación se realiza de forma precisa según el estandar <strong>CLAEES</strong>
+                            (Clasificación de Actividades Económicas de El Salvador).</p>
+
+                        <ul class="list-unstyled">
+                            <li class="d-flex align-items-start mb-2">
+                                <i class="bi bi-bar-chart-fill text-purple me-2"></i>
+                                <span>Analiza métricas clave como <strong>Prueba Ácida, Razón Corriente, Margen Neto y ROA</strong>,
+                                    entre otros indicadores vitales.</span>
+                            </li>
+                            <li class="d-flex align-items-start mb-2">
+                                <i class="bi bi-check-circle-fill text-purple me-2"></i>
+                                <span>Obtén <strong>benchmarks precisos </strong>comparándote solo con empresas de tu misma clase y
+                                    grupo de actividad económica CLAEES.</span>
+                            </li>
+                            <li class="d-flex align-items-start mb-5">
+                                <i class="bi bi-lightning-fill text-purple me-2"></i>
+                                <span>Identifica <strong>fortalezas y áreas de oportunidad </strong>de forma inmediata para optimizar
+                                    tu gestión financiera y aumentar la rentabilidad.</span>
+                            </li>
+                        </ul>
+
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid p-5 rounded shadow-sm custom-black bg-purple">
+            <div class="row align-items-center">
+                <!-- Columna izquierda: Texto -->
+                <div class="col-md-6 text-center text-md-start mb-4 mb-md-0">
+                    <h2 class="display-4 custom-font">Proyecta tus Ventas</h2>
+                    
+                </div>
+
+                <!-- Columna derecha: Imagen -->
+                <div class="col-md-6 text-center">
+                    <img src="{% static 'img/logo.svg' %}" alt="Imagen de bienvenida" class="img-fluid">
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid p-5 rounded shadow-sm custom-black bg-purple">
+            <div class="row align-items-center">
+                <!-- Columna izquierda: Texto -->
+                <div class="col-md-6 text-center text-md-start mb-4 mb-md-0">
+                    <h2 class="display-4 custom-font">Monitorea tus Balances</h2>
+                   
+                </div>
+
+                <!-- Columna derecha: Imagen -->
+                <div class="col-md-6 text-center">
+                    <img src="{% static 'img/logo.svg' %}" alt="Imagen de bienvenida" class="img-fluid">
                 </div>
             </div>
 
 
 
-        </header>
-    </div>
 
 
-    {% endblock %}
+        </div>
+        <footer class="custom-black-1 text-white text-center py-3 mt-4">
+            &copy; 2025 Stela. Todos los derechos reservados.
+        </footer>
 
-    {% bootstrap_javascript %}
+        {% endblock %}
+
+        {% bootstrap_javascript %}
 </body>
 
 </html>

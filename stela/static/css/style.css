@@ -13,8 +13,15 @@ body {
   font-family: 'Poppins', sans-serif;
   font-weight: 600; /* optional */
 }
+.custom-black-1 {
+  background-color: #2e3440 !important; /* Dark background */
+  color: #d8dee9 !important; /* White text */
+}
 
-
+.custom-black {
+  background-color: #3b4252 !important; /* Dark background */
+  color: #d8dee9 !important; /* White text */
+}
 .custom-white {
   background-color: #d8dee9 !important; /* White background */
 }
