@@ -76,6 +76,22 @@
             </div>
 
             <div class="input-contenedor">
+              <i class="fa-solid fa-id-card"></i>
+              <input
+                type="text"
+                name="dui"
+                id="dui"
+                class="form-control"
+                required
+                maxlength="10"
+                placeholder="00000000-0"
+                title="Formato: 00000000-0"
+                value="{{ data.dui|default:'' }}"
+              />
+              <label for="dui" class="font-weight-bold">DUI</label>
+            </div>
+
+            <div class="input-contenedor">
               <i class="fa-solid fa-envelope"></i>
               <input
                 type="email"
