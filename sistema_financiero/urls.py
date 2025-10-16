@@ -16,8 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
 
 urlpatterns = [
+    # Redirect the root URL to 'stela/'
+    path('', lambda request: redirect('stela/', permanent=False)),
+    
     path("accounts/", include("accounts.urls")),
     path('accounts/', include('django.contrib.auth.urls')),
     path("stela/", include("stela.urls")),
