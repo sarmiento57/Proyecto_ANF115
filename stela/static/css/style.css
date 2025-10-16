@@ -3,6 +3,7 @@
 
 body {
   font-family: 'Poppins', sans-serif;
+  
 }
 .custom-font{
   font-family: 'Playwrite US Modern', serif;
@@ -12,6 +13,12 @@ body {
 .navbar-brand {
   font-family: 'Poppins', sans-serif;
   font-weight: 600; /* optional */
+}
+.custom-blue {
+  background-color: #81a1c1 !important; /* A richer green/teal */
+}
+.custom-blue-1 {
+  background-color: #81a1c1 !important; /* A richer green/teal */
 }
 .custom-black-1 {
   background-color: #2e3440 !important; /* Dark background */
@@ -27,4 +34,170 @@ body {
 }
 .custom-purple {
   background-color: #5e81ac !important; /* Darker shade for hover effect */
+}
+
+.number-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  color: white;
+  background-color: #bf616a; /* Default color */
+  margin-bottom: 1rem;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+
+.hover-card {
+  background: linear-gradient(135deg, #faf3e0, #ebcb8b);
+  color: #2e3440;
+  border-radius: 1.2rem;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #5e81ac, #8fbcbb);
+    min-height: calc(80vh - 70px);
+}
+
+/* Card background with subtle transparency */
+.hero-card {
+    background-color: rgba(235, 203, 139, 0.15);
+    color: #eceff4;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Hero title and text */
+.hero-title, .hero-text {
+    color: #0c0d0f;
+}
+
+/* Logo max width */
+.hero-logo {
+    max-width: 220px;
+}
+
+/* Icon circles */
+.icon-circle {
+    width: 20px;
+    height: 20px;
+    min-width: 20px; /* ensures small circle in flex layout */
+    min-height: 20px;
+    border-radius: 50%;
+    background-color: #ebcb8b;
+    color: #5e81ac; /* icon color */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    margin-right: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Optional: hover effect for each item */
+.hero-item:hover {
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 0.5rem;
+    transition: 0.3s ease;
+}
+
+/* ===== HERO SECTION (Dark Version) ===== */
+.hero-section-dark {
+    background: #2e3440; /* fondo principal oscuro */
+    color: #eceff4;
+    min-height: calc(80vh - 70px);
+}
+
+/* Card con transparencia sutil */
+.hero-card-dark {
+    background-color: rgba(76, 86, 106, 0.3); /* gris azulado translúcido */
+    color: #eceff4;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Título y texto con alto contraste */
+.hero-title-dark {
+    color: #eceff4; /* texto claro */
+}
+
+.hero-text-dark {
+    color: #d8dee9; /* gris suave */
+}
+
+/* Logo */
+.hero-logo-dark {
+    max-width: 220px;
+    filter: brightness(0.9);
+}
+
+/* Iconos circulares (contraste sobre fondo oscuro) */
+.icon-circle-dark {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    border-radius: 50%;
+    background-color: #ebcb8b; /* dorado suave */
+    color: #2e3440; /* icono oscuro sobre fondo claro */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    margin-right: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Efecto hover para ítems */
+.hero-item-dark:hover {
+    background-color: rgba(235, 203, 139, 0.1);
+    border-radius: 0.5rem;
+    transition: 0.3s ease;
+}
+/* ===== END HERO SECTION ===== */
+
+/* === Footer === */
+.custom-footer {
+    background-color: #2e3440 !important;/* oscuro elegante */ 
+    margin-top: 0; /* elimina separación */
+    border-top: 2px solid rgba(235, 203, 139, 0.4); /* sutil línea superior */
+    font-size: 0.95rem;
+}
+
+/* Texto */
+.footer-copy {
+    color: #eceff4;
+}
+
+/* Créditos */
+.footer-credits {
+    font-size: 0.85rem;
+    color: #d8dee9;
+}
+
+.footer-credits a {
+    color: #ebcb8b;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-credits a:hover {
+    color: #f5d67b;
+    text-decoration: underline;
+}
+
+/* Ajusta separación con sección superior */
+.hero-section {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
 }
