@@ -1,0 +1,131 @@
+{% load static%}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Análisis de Empresas – Tabs</title>
+  <link rel="stylesheet" href="{% static 'tools/css/style.css'%}">
+</head>
+<body>
+  <div class="wrap">
+    <div class="tabs" role="tablist" aria-label="Análisis de empresas">
+      <button class="tab" role="tab" id="tab-hz" aria-controls="panel-hz" aria-selected="true">Análisis Horizontal</button>
+      <button class="tab" role="tab" id="tab-vt" aria-controls="panel-vt" aria-selected="false">Análisis Vertical</button>
+      <button class="tab" role="tab" id="tab-bm" aria-controls="panel-bm" aria-selected="false">Benchmarking</button>
+    </div>
+
+    <!-- Horizontal -->
+    <section id="panel-hz" class="panel active" role="tabpanel" tabindex="0" aria-labelledby="tab-hz">
+      <table class="table zebra">
+        <thead>
+          <tr>
+            <th>Cuenta</th>
+            <th>Año X</th>
+            <th>Año X+1</th>
+            <th>Cambio</th>
+            <th>Porcentual</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="muted">(Ej.) Ventas Netas</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td class="muted">(Ej.) Costo de Ventas</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td class="muted">(Ej.) Utilidad Bruta</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <img src="{% static 'tools/img/chuleta.png'%}" alt="pizaza">
+    </section>
+
+    <!-- Vertical -->
+    <section id="panel-vt" class="panel" role="tabpanel" tabindex="0" aria-labelledby="tab-vt" hidden>
+      <table class="table zebra">
+        <thead>
+          <tr>
+            <th>Cuenta</th>
+            <th>Año X</th>
+            <th>Porcentaje</th>
+            <th>Año X+1</th>
+            <th>Porcentaje</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="muted">(Ej.) Activo Circulante</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td class="muted">(Ej.) Activo No Circulante</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td class="muted">(Ej.) Total Activo</td><td>—</td><td>100%</td><td>—</td><td>100%</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Benchmarking -->
+    <section id="panel-bm" class="panel" role="tabpanel" tabindex="0" aria-labelledby="tab-bm" hidden>
+      <div style="padding:12px 12px 0">
+        <h3 style="margin:8px 0 12px">Razones de Liquidez</h3>
+      </div>
+      <table class="table zebra" aria-label="Razones de Liquidez">
+        <thead>
+          <tr>
+            <th>Razón</th><th>Año X</th><th>Año X+1</th><th>Cambio</th><th>Porcentual</th><th>Estandar</th><th>Desviación</th><th>Gravedad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="muted">(Ej.) Razón Corriente</td><td>—</td><td>—</td><td>—</td><td>—</td><td>2.0</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <div style="padding:20px 12px 0">
+        <h3 style="margin:8px 0 12px">Razones de Actividad</h3>
+      </div>
+      <table class="table zebra" aria-label="Razones de Actividad">
+        <thead>
+          <tr>
+            <th>Razón</th><th>Año X</th><th>Año X+1</th><th>Cambio</th><th>Porcentual</th><th>Estandar</th><th>Desviación</th><th>Gravedad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="muted">(Ej.) Rotación de Inventario</td><td>—</td><td>—</td><td>—</td><td>—</td><td>5.0</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const panels = {
+      'tab-hz': document.getElementById('panel-hz'),
+      'tab-vt': document.getElementById('panel-vt'),
+      'tab-bm': document.getElementById('panel-bm'),
+    };
+
+    function activate(id, focusPanel = true){
+      tabs.forEach(t=>{
+        const on = t.id === id;
+        t.setAttribute('aria-selected', on);
+        const p = panels[t.id];
+        p.classList.toggle('active', on);
+        p.toggleAttribute('hidden', !on);
+        if(on && focusPanel) p.focus();
+      });
+      const hash = id.replace('tab-','');
+      history.replaceState(null, '', `#${hash}`);
+    }
+
+    tabs.forEach(t=>t.addEventListener('click',()=>activate(t.id)));
+
+    document.querySelector('[role="tablist"]').addEventListener('keydown', (e)=>{
+      const idx = tabs.findIndex(t=>t.getAttribute('aria-selected')==='true');
+      if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) e.preventDefault();
+      if(e.key==='ArrowLeft') tabs[Math.max(0, idx-1)].focus();
+      if(e.key==='ArrowRight') tabs[Math.min(tabs.length-1, idx+1)].focus();
+      if(e.key==='Home') tabs[0].focus();
+      if(e.key==='End') tabs[tabs.length-1].focus();
+      if(e.key==='Enter' || e.key===' ') activate(document.activeElement.id);
+    });
+
+    const map = { hz:'tab-hz', vt:'tab-vt', bm:'tab-bm', horizontal:'tab-hz', vertical:'tab-vt', benchmarking:'tab-bm' };
+    const initial = map[location.hash.replace('#','').toLowerCase()];
+    if(initial) activate(initial, false);
+  </script>
+</body>
+</html>
+
