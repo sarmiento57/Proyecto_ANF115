@@ -48,8 +48,9 @@ py manage.py runserver
 ```
 ### 2 Insertar scripts SQL con datos iniciales
 
-```markdown
-# 1. Ejecutar el siguiente comando
+```bash
+# 1. Ejecutar el siguiente comando(Eliminar db.sqlite3 previamente)
+Esto inserta un scripts con datos en las tablas de usuario, acceso y opciones formulario
 py manage.py insertSQ
 
 
