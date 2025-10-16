@@ -12,57 +12,8 @@
   <body>
     {% block content %}
     <section>
-      <!-- mensaje de error con javascript y validacion del mensaje de exito de register-->
-      {% if messages %}
-      <div id="errorBox" class="error-box">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}" role="alert">
-          <p>{{ message }}</p>
-        </div>
-        {% endfor %}
-        <button
-          type="button"
-          class="btn-close"
-          onclick="hideError()"
-          aria-label="Close"
-        ></button>
-      </div>
-
-      {% elif form.errors %}
-      <div id="errorBox" class="error-box">
-        <div class="alert alert-danger" role="alert">
-          <p>Usuario o contraseña incorrectos. Inténtalo de nuevo.</p>
-        </div>
-        <button
-          type="button"
-          class="btn-close"
-          onclick="hideError()"
-          aria-label="Close"
-        ></button>
-      </div>
-
-      {% elif next and user.is_authenticated %}
-      <div id="errorBox" class="error-box">
-        <div class="alert alert-danger" role="alert">
-          <p>No tienes acceso a esta página. Inicia sesión con otra cuenta.</p>
-        </div>
-        <button
-          type="button"
-          class="btn-close"
-          onclick="hideError()"
-          aria-label="Close"
-        ></button>
-      </div>
-      {% endif %}
-
-      <script>
-        function hideError() {
-          const box = document.getElementById("errorBox");
-          if (box) {
-            box.style.display = "none";
-          }
-        }
-      </script>
+      <!-- mostrar mensaje de error -->
+       {% include 'partials/messages.html' %}
 
       <div class="contenedor">
         <div class="imagen">
