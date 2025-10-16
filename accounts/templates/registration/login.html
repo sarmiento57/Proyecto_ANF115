@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    {% block content %}
+        <section>
+          <!-- mensaje de error con javascript -->
+              <div id="errorBox" class="error-box">
+                {% if form.errors %}
+                  <div class="alert alert-danger" role="alert">
+                    <p>Lo siento, tu nombre de usuario y contraseña no coinciden. Por favor, inténtalo de nuevo.</p>
+                  </div>
+                {% endif %}
+            
+                {% if next %}
+                  {% if user.is_authenticated %}
+                    <div class="alert alert-danger" role="alert">
+                      <p>Lo siento, tu cuenta no tiene acceso a esta página. Para continuar, inicia sesión con una cuenta que tenga acceso.</p>
+                    </div>
+                  {% endif %}
+                {% endif %}
+            
+                <button type="button" class="btn-close" onclick="hideError()" aria-label="Close"></button>
+              </div>
+              
+              <script>
+               
+                function hideError() {
+                  document.getElementById('errorBox').style.display = 'none';
+                }
+              </script>
+
+            <div class="contenedor">
+                <div class="imagen">
+                    <h3>Accede a tu cuenta</h3>
+                    <img src="{% static 'logo.svg' %}" alt="Imagen de inicio de sesión">
+                </div>
+                <div class="formulario">
+                    <form action="#" method="post">
+                        {% csrf_token %}
+                        <h2>Iniciar Sesión</h2>
+                        <div class="input-contenedor">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" name="username" id="username" class="form-control" required>
+                            <label for="username" class="font-weight-bold">Nombre de usuario</label>
+                        </div>
+
+                        <div class="input-contenedor">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" name="password" id="password" class="form-control" required>
+                            <label for="password" class="font-weight-bold">Contraseña</label>
+                        </div>
+
+                        <div class="olvidar">                         
+                            <a href="{% url 'password_reset' %}">¿Olvidaste tu contraseña?</a>
+                        </div>  
+                        
+                        <div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 30px; background-color: #5e81ac; border: none; color: rgb(0, 0, 0);">Iniciar Sesión</button>
+                        </div>       
+                    </form>  
+                </div>
+            </div>      
+        </section>
+    {% endblock %}
+    {% bootstrap_javascript %}
+</body>
+</html>
