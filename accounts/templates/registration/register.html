@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registro</title>
+
+    {% load django_bootstrap5 %} {% bootstrap_css %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}" />
+  </head>
+  <body>
+    {% block content %}
+    <section>
+      <!-- mensaje de errores -->
+      {% if messages %}
+      <div id="errorBox" class="error-box">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" role="alert">
+          <p>{{ message }}</p>
+        </div>
+        {% endfor %}
+        <button
+          type="button"
+          class="btn-close"
+          onclick="hideError()"
+          aria-label="Close"
+        ></button>
+      </div>
+
+      <script>
+        function hideError() {
+          document.getElementById("errorBox").style.display = "none";
+        }
+      </script>
+      {% endif %}
+
+      <!-- formulario del register -->
+      <div class="contenedor">
+        <div class="imagen">
+          <img src="{% static 'logo.svg' %}" alt="Imagen de inicio de sesión" />
+        </div>
+        <div class="formulario">
+          <form method="post" action="{% url 'register' %}">
+            {% csrf_token %}
+            <h2>Registro de usuario</h2>
+
+            <div class="input-contenedor">
+              <i class="fa-solid fa-user"></i>
+              <input
+                type="text"
+                name="first_name"
+                id="first_name"
+                class="form-control"
+                required
+                pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
+                title="Solo letras y espacios"
+                value="{{ data.first_name|default:'' }}"
+              />
+              <label for="first_name" class="font-weight-bold">Nombres</label>
+            </div>
+
+            <div class="input-contenedor">
+              <i class="fa-solid fa-user"></i>
+              <input
+                type="text"
+                name="last_name"
+                id="last_name"
+                class="form-control"
+                required
+                pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
+                title="Solo letras y espacios"
+                value="{{ data.last_name|default:'' }}"
+              />
+              <label for="last_name" class="font-weight-bold">Apellidos</label>
+            </div>
+
+            <div class="input-contenedor">
+              <i class="fa-solid fa-envelope"></i>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                class="form-control"
+                required
+                value="{{ data.email|default:'' }}"
+              />
+              <label for="email" class="font-weight-bold"
+                >Correo electrónico</label
+              >
+            </div>
+
+            <div class="input-contenedor">
+              <i class="fa-solid fa-phone"></i>
+              <input
+                type="text"
+                name="phone"
+                id="phone"
+                class="form-control"
+                required
+                maxlength="9"
+                placeholder="7777-7777"
+                title="Formato: 7777-7777"
+                value="{{ data.phone|default:'' }}"
+              />
+              <label for="phone" class="font-weight-bold"
+                >Número de teléfono</label
+              >
+            </div>
+
+            <div class="input-contenedor">
+              <i class="fa-solid fa-user"></i>
+              <input
+                type="text"
+                name="username"
+                id="username"
+                class="form-control"
+                required
+                pattern="[A-Za-z0-9_]+"
+                title="Solo letras, números y guion bajo"
+                value="{{ data.username|default:'' }}"
+              />
+              <label for="username" class="font-weight-bold"
+                >Nombre de usuario</label
+              >
+            </div>
+
+            <div class="input-contenedor">
+              <i class="fa-solid fa-lock"></i>
+              <input
+                type="password"
+                name="password"
+                id="password"
+                class="form-control"
+                required
+                minlength="6"
+              />
+              <label for="password" class="font-weight-bold">Contraseña</label>
+            </div>
+
+            <div class="input-contenedor">
+              <i class="fa-solid fa-lock"></i>
+              <input
+                type="password"
+                name="password2"
+                id="password2"
+                class="form-control"
+                required
+                minlength="6"
+              />
+              <label for="password2" class="font-weight-bold"
+                >Confirmar contraseña</label
+              >
+            </div>
+
+            <div class="olvidar">
+              <a href="{% url 'landing' %}">Ir a la página de inicio</a>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                style="
+                  margin-top: 30px;
+                  background-color: #5e81ac;
+                  border: none;
+                  color: rgb(0, 0, 0);
+                "
+              >
+                Registrarse
+              </button>
+            </div>
+
+            <div class="olvidar">
+              <a href="{% url 'login' %}"
+                >¿Ya tienes una cuenta? Inicia sesión</a
+              >
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+    {% endblock %} {% bootstrap_javascript %}
+    <script src="{% static 'js/mascara.js' %}"></script>
+  </body>
+</html>
