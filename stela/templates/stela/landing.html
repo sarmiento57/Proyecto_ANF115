@@ -15,7 +15,8 @@
     {% block content %}
     <div>
         <header>
-            <nav class="navbar navbar-expand-lg custom-purple shadow-sm">
+            <nav class="navbar navbar-expand-lg custom-purple shadow-sm fixed-top"
+                style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
                 <div class="container-fluid">
                     <a class="navbar-brand d-flex align-items-center" href="#">
                         <img src="{% static 'img/logo.svg' %}" alt="Logo de Stela" class="me-2"
@@ -28,29 +29,216 @@
                     </div>
                 </div>
             </nav>
-            <div class="container-fluid p-5 rounded shadow-sm custom-white bg-purple">
-                <div class="row align-items-center">
-                    <!-- Columna izquierda: Texto -->
-                    <div class="col-md-6 text-center text-md-start mb-4 mb-md-0">
-                        <h2 class="display-4 custom-font">Estima el FUTURO</h2>
-                        <p class="display-6 custom-font">donde quiera que vayas.</p>
-                        <p class="lead">Tu herramienta para mantenerte competitivo en el mercado</p>
-                        <a href="{% url 'register' %}" class="btn btn-lg btn-light mt-3">Comenzar Ahora</a>
-                    </div>
+        </header>
+        <div class="container-fluid p-5 rounded shadow-sm custom-white bg-purple mt-5">
+            <div class="row align-items-center">
+                <!-- Columna izquierda: Texto -->
+                <div class="col-md-6 text-center text-md-start mb-4 mb-md-0">
+                    <h2 class="display-4 custom-font">Estima el FUTURO</h2>
+                    <p class="display-6 custom-font">donde quiera que vayas.</p>
+                    <p class="lead">Tu herramienta para mantenerte competitivo en el mercado</p>
+                    <a href="#" class="btn btn-lg btn-success mt-3">Comenzar Ahora</a>
+                </div>
 
-                    <!-- Columna derecha: Imagen -->
-                    <div class="col-md-6 text-center">
-                        <img src="{% static 'img/logo.svg' %}" alt="Imagen de bienvenida" class="img-fluid">
+                <!-- Columna derecha: Imagen -->
+                <div class="col-md-6 text-center">
+                    <video class="img-fluid" style="max-width: 600px;" autoplay loop muted playsinline>
+                        <source src="{% static 'videos/logo-animado.mp4' %}" type="video/mp4">
+                        Tu navegador no soporta el video.
+                    </video>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-0 container-fluid custom-white text-center py-5">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="p-4 border rounded-4 shadow-sm h-100 hover-card">
+                        <h3 class="fw-bold mb-3 number-circle">1</h3>
+                        <p>Registrate.</p>
+                        <p class="text-muted">Completa los formularios para registrar tu usuario, luego registra a la
+                            empresa que representas.</p>
+                        <img src="{% static 'img/employee.png' %}" alt="Imagen de excel" class="img-fluid">
+                        <img src="{% static 'img/enterprise.png' %}" alt="Imagen de libre office" class="img-fluid">
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="p-4 border  rounded-4 shadow-sm h-100 hover-card ">
+                        <h3 class="fw-bold mb-3 number-circle">2</h3>
+                        <p>Actualiza.</p>
+                        <p class="text-muted">Ingresa tu catalogo contable, y actualizalo con tus datos financieros.</p>
+
+                        <p class="text-muted">Actualiza de forma rápida por medio de documentos Microsoft Excel o Libre
+                            Office.</p>
+                        <img src="{% static 'img/excel-logo.png' %}" alt="Imagen de excel" class="img-fluid">
+                        <img src="{% static 'img/libreoffice-logo.png' %}" alt="Imagen de libre office"
+                            class="img-fluid">
+
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="p-4 border rounded-4 shadow-sm h-100 hover-card">
+                        <h3 class="fw-bold mb-3 number-circle">3</h3>
+                        <p>Analiza.</p>
+                        <p class="text-muted">Evalua los indicadores dentro de tu organización y comparate con otras
+                            organizaciones de tu mismo sector.</p>
+                        <img src="{% static 'img/evaluation.png' %}" alt="Imagen de evaluación" class="img-fluid">
+                        <img src="{% static 'img/benchmarking.png' %}" alt="Imagen de benchamrking" class="img-fluid">
+
                     </div>
                 </div>
             </div>
-        </header>
-    </div>
+        </div>
+        <div class="container-fluid py-5 rounded shadow-sm hero-section">
+            <div class="row align-items-center">
+                <!-- Columna izquierda: Imagen -->
+                <div class="col-md-4 text-center mb-4 mb-md-0">
+                    <img src="{% static 'img/logo.svg' %}" alt="Imagen de bienvenida" class="img-fluid hero-logo">
+                </div>
+
+                <!-- Columna derecha: Texto -->
+                <div class="col-md-8 text-center text-md-start">
+                    <div class="hero-card p-4 rounded-4">
+                        <h2 class="display-6 custom-font mb-4 hero-title">Comparación de Ratios Financieros
+                        </h2>
+                        <p class="lead mb-4 hero-text">
+                            Compara el desempeño de tu empresa con el <strong>promedio de la industria</strong> en El
+                            Salvador.
+                            La clasificación se realiza según el estándar <strong>CLAEES</strong>.
+                        </p>
+
+                        <ul class="list-unstyled">
+                            <li class="d-flex align-items-start mb-3 hero-item">
+                                <div class="icon-circle">
+                                    <i class="bi bi-bar-chart-fill"></i>
+                                </div>
+                                <span class="text-black">Analiza métricas clave como <strong>Prueba Ácida, Razón
+                                        Corriente, Margen Neto y
+                                        ROA</strong>.</span>
+                            </li>
+
+                            <li class="d-flex align-items-start mb-3 hero-item">
+                                <div class="icon-circle">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </div>
+                                <span class="text-black">Obtén <strong>benchmarks precisos</strong> comparándote solo
+                                    con empresas de tu
+                                    mismo grupo CLAEES.</span>
+                            </li>
+
+                            <li class="d-flex align-items-start mb-3 hero-item">
+                                <div class="icon-circle">
+                                    <i class="bi bi-lightning-fill"></i>
+                                </div>
+                                <span class="text-black">Identifica <strong>fortalezas y áreas de oportunidad</strong>
+                                    para optimizar tu
+                                    gestión financiera.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid py-5 rounded shadow-sm hero-section-dark">
+            <div class="row align-items-center">
+                <!-- Columna 1: Texto -->
+                <div class="col-md-8 text-center text-md-start mb-4 mb-md-0">
+                    <div class="hero-card-dark p-4 rounded-4">
+                        <h2 class="display-6 custom-font mb-4 hero-title-dark">Monitorea tus balances financieros</h2>
+                        <p class="lead mb-4 hero-text-dark">
+                            Mantente al día del estado actual de tu organización.
+                        </p>
+
+                        <ul class="list-unstyled">
+                            <li class="d-flex align-items-start mb-3 hero-item-dark">
+                                <div class="icon-circle-dark">
+                                    <i class="bi bi-bar-chart-fill"></i>
+                                </div>
+                                <span>Actualiza periódicamente tus balances</span>
+                            </li>
+
+                            <li class="d-flex align-items-start mb-3 hero-item-dark">
+                                <div class="icon-circle-dark">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </div>
+                                <span>Compara las variaciones de las cuentas en un periodo determinado.</span>
+                            </li>
+
+                            <li class="d-flex align-items-start mb-3 hero-item-dark">
+                                <div class="icon-circle-dark">
+                                    <i class="bi bi-lightning-fill"></i>
+                                </div>
+                                <span>Gráficas de evolución de por lo menos 3 años.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Columna 2: Imagen -->
+                <div class="col-md-4 text-center">
+                    <img src="{% static 'img/logo.svg' %}" alt="Imagen de bienvenida" class="img-fluid hero-logo-dark">
+                </div>
+            </div>
+        </div>
 
 
-    {% endblock %}
+        <div class="container-fluid py-5 rounded shadow-sm hero-section">
+            <div class="row align-items-center">
+                <!-- Columna izquierda: Imagen -->
+                <div class="col-md-4 text-center mb-4 mb-md-0">
+                    <img src="{% static 'img/logo.svg' %}" alt="Imagen de bienvenida" class="img-fluid hero-logo">
+                </div>
 
-    {% bootstrap_javascript %}
+                <!-- Columna derecha: Texto -->
+                <div class="col-md-8 text-center text-md-start">
+                    <div class="hero-card p-4 rounded-4">
+                        <h2 class="display-6 custom-font mb-4 hero-title">Proyecta tus Ventas</h2>
+                        <p class="lead mb-4 hero-text">
+                            Proyección de hasta 12 meses basada en tus ventas históricas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="custom-footer text-white py-4">
+            <div class="container">
+                <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-center text-center">
+
+                    <div class="mb-3 mb-md-0">
+                        <span class="footer-copy">&copy; 2025 <strong>Stela</strong>. Todos los derechos
+                            reservados.</span>
+                    </div>
+
+                    <div class="mb-3 mb-md-0">
+                        <img src="{% static 'img/logo-ues.png' %}" alt="Logo ues" class="img-fluid hero-logo"
+                            style="height: 40px; margin: 0 10px;">
+                        <img src="{% static 'img/django-logo.svg' %}" alt="Logo django" class="img-fluid hero-logo"
+                            style="height: 40px; margin: 0 10px;">
+                    </div>
+
+                    <div class="footer-credits">
+                        <span>Iconos por </span>
+                        <a href="https://www.flaticon.com/free-icons/results" target="_blank"
+                            title="results icons">HAJICON</a>,
+                        <a href="https://www.flaticon.com/free-icons/benchmark" target="_blank"
+                            title="benchmark icons">Eucalyp</a>,
+                        <a href="https://www.flaticon.com/free-icons/work" target="_blank"
+                            title="work icons">geotatah</a>,
+                        <a href="https://www.flaticon.com/free-icons/worker" target="_blank"
+                            title="worker icons">Freepik</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+
+        {% endblock %}
+
+        {% bootstrap_javascript %}
 </body>
 
 </html>

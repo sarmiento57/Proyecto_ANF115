@@ -1,0 +1,203 @@
+/* ============ Reset y base ============ */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  line-height: 1.5;
+  color: #1f2937;            /* slate-800 */
+  background: #f8fafc;       /* slate-50 */
+}
+
+/* Contenedor */
+.wrap {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+/* Utilidades */
+.muted { color: #6b7280; }       /* slate-500 */
+.hidden { display: none !important; }
+img { max-width: 100%; height: auto; display: block; }
+
+/* ============ Tabs accesibles ============ */
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: #ffffff;
+  color: #374151; /* gray-700 */
+  padding: 10px 14px;
+  border-radius: 10px 10px 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.tab:hover {
+  background: #f3f4f6; /* gray-100 */
+}
+
+.tab:focus {
+  outline: 2px solid #2563eb;    /* blue-600 */
+  outline-offset: 2px;
+}
+
+.tab[aria-selected="true"] {
+  background: #ffffff;
+  border-color: #e5e7eb #e5e7eb #ffffff #e5e7eb; /* borde inferior “pegado” al panel */
+  color: #111827; /* gray-900 */
+  box-shadow: 0 2px 0 0 #ffffff; /* para ocultar el borde inferior */
+}
+
+/* ============ Paneles ============ */
+.panel {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  display: none;           /* por defecto oculto; el HTML ya pone hidden */
+}
+
+.panel.active {
+  display: block;          /* el JS agrega .active y quita hidden */
+}
+
+.panel:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* ============ Tablas ============ */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  overflow: hidden;          /* redondeo visible en tablas */
+  border: 1px solid #e5e7eb;
+}
+
+.table thead th {
+  text-align: left;
+  background: #f9fafb;       /* gray-50 */
+  color: #374151;            /* gray-700 */
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9; /* slate-100 */
+  vertical-align: top;
+}
+
+.table.zebra tbody tr:nth-child(even) {
+  background: #fcfcfd;
+}
+
+.table tbody tr:hover {
+  background: #f5f7fb;
+}
+
+/* Celdas numéricas (si las usas) */
+.table td.num, .table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ============ Contenedor responsivo para tablas anchas ============ */
+.panel .table {
+  display: table;
+}
+
+@media (max-width: 768px) {
+  .panel {
+    padding: 10px;
+  }
+  .table {
+    display: block;
+    overflow-x: auto;      /* scroll horizontal en móviles */
+    white-space: nowrap;
+  }
+  .tabs {
+    gap: 6px;
+  }
+  .tab {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+}
+
+/* ============ Badges/Estados opcionales ============ */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.8;
+  background: #eef2ff;    /* indigo-50 */
+  color: #3730a3;         /* indigo-800 */
+}
+.badge.ok { background: #ecfdf5; color: #065f46; }       /* verde */
+.badge.warn { background: #fffbeb; color: #92400e; }     /* ámbar */
+.badge.dang { background: #fef2f2; color: #991b1b; }     /* rojo */
+
+/* ============ Tipografía y encabezados ============ */
+h1, h2, h3 {
+  margin: 12px 0 10px;
+  line-height: 1.25;
+  color: #0f172a; /* slate-900 */
+}
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.1rem; }
+
+/* ============ Tarjetas/espaciados auxiliares ============ */
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+}
+.space-y > * + * { margin-top: 12px; }
+
+/* ============ Dark mode (opcional) ============ */
+@media (prefers-color-scheme: dark) {
+  body { background: #0b1220; color: #e5e7eb; }
+  .tabs { border-bottom-color: #1f2937; }
+  .tab { background: #0f172a; color: #cbd5e1; border-color: transparent; }
+  .tab:hover { background: #111827; }
+  .tab[aria-selected="true"] {
+    background: #0b1220;
+    color: #ffffff;
+    border-color: #1f2937 #1f2937 #0b1220 #1f2937;
+    box-shadow: 0 2px 0 0 #0b1220;
+  }
+  .panel { background: #0f172a; border-color: #1f2937; }
+  .table { border-color: #1f2937; }
+  .table thead th { background: #0b1220; color: #e5e7eb; border-bottom-color: #1f2937; }
+  .table tbody td { border-bottom-color: #111827; }
+  .table.zebra tbody tr:nth-child(even) { background: #0e1525; }
+  .table tbody tr:hover { background: #0e1a2b; }
+  .badge { background: #111827; color: #d1d5db; }
+}
+
+/* ============ Print (por si lo exportas) ============ */
+@media print {
+  body { background: #ffffff; color: #111827; }
+  .tabs { display: none; }
+  .panel { display: block !important; border: none; padding: 0; }
+  .table { border-color: #e5e7eb; }
+}
