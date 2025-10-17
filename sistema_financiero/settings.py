@@ -15,6 +15,12 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Redirecciones despues de login/logout
+LOGIN_REDIRECT_URL = '/stela'
+LOGOUT_REDIRECT_URL = '/stela'
+
+# heredar de CustomUser
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -39,6 +45,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_bootstrap5',
     'stela',
+    'accounts',
+    'tools',
+   
 ]
 
 MIDDLEWARE = [
@@ -56,7 +65,7 @@ ROOT_URLCONF = 'sistema_financiero.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

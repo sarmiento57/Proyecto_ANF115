@@ -16,8 +16,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
+from django.conf.urls import handler404
+from django.shortcuts import render
 
 urlpatterns = [
+    # Redirect the root URL to 'stela/'
+    path('', lambda request: redirect('stela/', permanent=False)),
+    
+    path("accounts/", include("accounts.urls")),
+    path('accounts/', include('django.contrib.auth.urls')),
     path("stela/", include("stela.urls")),
     path('admin/', admin.site.urls),
+    path('tools/',include("tools.urls"))
 ]
+
+# Pagina 404 aun no funciona porque estamos en debug
+def custom404(request, exception):
+    return render(request, '404.html', status=404)
+
+handler404 = 'sistema_financiero.urls.custom404'

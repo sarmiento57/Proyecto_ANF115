@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playwrite+US+Modern:wght@400;600&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(to right, #d8dee9, #5e81ac);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.contenedor {
+    display: flex;
+    position: relative;
+    width: 820px;
+    min-height: 480px;
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* seccion izqueirda, imagen */
+.imagen {
+    position: relative;
+    width: 50%;
+    background-color: #5e81ac;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: #fff;
+}
+
+.imagen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.85;
+}
+
+/* titulo arriba de la iamgen */
+.imagen h3 {
+    position: absolute;
+    top: 1%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Playwrite US Modern', serif;
+    font-size: 2rem;
+    letter-spacing: 2px;
+    text-align: center;
+    z-index: 2;
+    color: #fff;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+}
+
+/* form */
+.formulario {
+    width: 50%;
+    padding: 40px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.formulario h2 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 2rem;
+    color: #2e3440;
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+/* inputs */
+.input-contenedor {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.input-contenedor input {
+    width: 100%;
+    height: 45px;
+    background-color: #eceff4;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    outline: none;
+    padding: 0 40px 0 10px;
+    font-size: 1rem;
+    color: #2e3440;
+    transition: all 0.3s ease;
+}
+
+.input-contenedor input:focus {
+    border-color: #5e81ac;
+    background-color: #f0f4f8;
+}
+
+.input-contenedor label {
+    position: absolute;
+    top: -18px;
+    left: 5px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4c566a;
+    background-color: #fff;
+    padding: 0 5px;
+}
+
+.input-contenedor i {
+    position: absolute;
+    right: 10px;
+    top: 12px;
+    color: #5e81ac;
+    font-size: 1.3rem;
+}
+
+/* pass olvidada */
+.olvidar {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.olvidar a {
+    color: #5e81ac;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.olvidar a:hover {
+    text-decoration: underline;
+}
+
+/* boton */
+button {
+    width: 100%;
+    height: 45px;
+    border: none;
+    border-radius: 30px;
+    background-color: #5e81ac;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #4c70a0;
+    transform: scale(1.02);
+}
+
+/* alarta de error */
+.error-box {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    width: 300px;
+    padding: 15px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    z-index: 1000;
+    animation: slideIn 0.5s forwards;
+}
+
+@keyframes slideIn {
+    from { right: -300px; opacity: 0; }
+    to { right: 15px; opacity: 1; }
+}
+
