@@ -25,6 +25,15 @@ main{margin-left:180px}
   text-align: left;
 }
 
+#link-landing {
+  background: none;
+  border: none;
+  color: var(--nord6); /* always white */
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
 #btn-companies:hover {
   color: var(--accent); /* light blue on hover */
   text-decoration: underline;

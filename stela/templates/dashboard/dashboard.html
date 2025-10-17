@@ -27,7 +27,11 @@
   <aside class="sidebar bg-nord0 text-nord6 p-3 d-flex flex-column">
     <div class="brand mb-4 px-2 d-flex align-items-center">
         <img src="{% static 'img/logo.svg' %}" alt="Stela logo" style="height: 32px; margin-right: 8px;">
-        <span>Stela</span>
+        <span>
+            <a href="{% url 'landing' %}" class="btn btn-link fw-bold text-decoration-none" id="link-landing">
+                Stela
+            </a>
+        </span>
     </div>
 
 
