@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{% static 'tools/css/style.css'%}">
 </head>
 <body>
+  {% include 'partials/messages.html' %}
   <div class="wrap">
     <div class="tabs" role="tablist" aria-label="Análisis de empresas">
       <button class="tab" role="tab" id="tab-hz" aria-controls="panel-hz" aria-selected="true">Análisis Horizontal</button>
@@ -36,6 +37,12 @@
       </table>
       <img src="{% static 'tools/img/chuleta.png'%}" alt="pizaza">
     </section>
+
+    <!-- boton de prueba-->
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit">Realizar Acción</button>
+    </form>
 
     <!-- Vertical -->
     <section id="panel-vt" class="panel" role="tabpanel" tabindex="0" aria-labelledby="tab-vt" hidden>
