@@ -1,8 +1,6 @@
 // Simple client-side state for demo and Django friendliness
 const companiesEl = document.getElementById('companies');
 const catalogActions = document.getElementById('catalog-actions');
-const saveCompanyBtn = document.getElementById('save-company');
-const companyNameInput = document.getElementById('company-name');
 
 // initial companies (empty array -> shows catalog actions)
 let companies = []; // you can preload companies here, e.g. ['Empresa 1']
@@ -27,18 +25,6 @@ function toggleCatalogActions(){
     catalogActions.style.display = 'flex';
   }
 }
-
-// Hook up saving a company
-saveCompanyBtn.addEventListener('click', ()=>{
-  const name = companyNameInput.value.trim();
-  if(!name) return;
-  companies.push(name);
-  companyNameInput.value = '';
-  // close modal (Bootstrap)
-  const modal = bootstrap.Modal.getInstance(document.getElementById('modalCompany'));
-  modal.hide();
-  renderCompanies();
-});
 
 // initial render
 renderCompanies();
