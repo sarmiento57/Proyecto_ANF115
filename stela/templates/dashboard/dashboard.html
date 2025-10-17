@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 {% load static %}
+{% include 'partials/messages.html' %}
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -24,41 +25,52 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar bg-nord0 text-nord6 p-3 d-flex flex-column">
-    <div class="brand mb-4 px-2">Stela</div>
+    <div class="brand mb-4 px-2 d-flex align-items-center">
+        <img src="{% static 'img/logo.svg' %}" alt="Stela logo" style="height: 32px; margin-right: 8px;">
+        <span>Stela</span>
+    </div>
+
 
     <nav class="nav flex-column mb-3">
       <a class="nav-link text-nord6 active d-flex flex-column align-items-center mb-3" href="#">
           <i class="fa-solid fa-grip-vertical fa-2x mb-1"></i>
           <span>Dashboard</span>
       </a>
-      <a class="nav-link text-nord6 active d-flex flex-column align-items-center mb-3" href="#">
+      <a class="nav-link text-nord6 d-flex flex-column align-items-center mb-3" href="#">
           <i class="fa-solid fa-chart-line fa-2x mb-1"></i>
           <span>Herramientas</span>
       </a>
     </nav>
 
     <div class="mt-auto">
-      <div class="company-list mb-3">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <div class="fw-bold">Empresas</div>
-          <button class="btn btn-sm btn-outline-light" id="btn-add-company" data-bs-toggle="modal" data-bs-target="#modalCompany">Agregar</button>
-        </div>
-        <ul id="companies" class="list-unstyled small"></ul>
-      </div>
+  <div class="company-list mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <!-- Clean clickable "Empresas" -->
+      <button id="btn-companies" class="btn btn-link p-0 fw-bold text-decoration-none">
+        Empresas
+      </button>
 
-      <div class="profile-section">
-        <button class="btn btn-light w-100 text-start" data-bs-toggle="modal" data-bs-target="#modalProfile">
-          <i class="fa-regular fa-user me-2"></i> Perfil
-        </button>
-      </div>
+      <button class="btn btn-sm btn-outline-light" id="btn-add-company">
+        <i class="fa-solid fa-plus mb-1"></i>
+      </button>
     </div>
+    <ul id="companies" class="list-unstyled small"></ul>
+  </div>
+
+  <div class="profile-section">
+    <button class="btn btn-light w-100 text-start" id="btn-profile">
+      <i class="fa-regular fa-user me-2"></i> Nombre
+    </button>
+  </div>
+</div>
+
 
   </aside>
 
   <!-- MAIN -->
   <main class="flex-grow-1 p-4">
     <div class="container-fluid">
-      <!-- top row: charts -->
+      <!-- graficos -->
       <div class="row g-3">
         <div class="col-12 col-md-4">
           <div class="card p-3 chart-card">
@@ -80,7 +92,7 @@
         </div>
       </div>
 
-      <!-- catalog -->
+      <!-- catalogo -->
       <section class="mt-4">
         <h5>Catálogo</h5>
         <div class="card p-3 position-relative">
