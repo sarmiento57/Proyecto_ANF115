@@ -21,16 +21,17 @@ def access_required(option_id, stay_on_page=False):
                 return view_func(request, *args, **kwargs)
 
             # si no tiene acceso a la opcion o a la vista
-            if not UserAccess.objects.filter(userId=user, optionId__optionId=option_id).exists():
-                messages.error(request, 'No tienes permiso para acceder a esta vista.')
+            has_access = UserAccess.objects.filter(userId=user, optionId__optionId=option_id).exists()
 
-                # esto hace que se quede en la misma pagina solo si stay_on_page es True
+            if not has_access:
                 if stay_on_page:
-                    messages.error(request, 'No tienes permiso para realizar esta acción.')
+                    if request.method == 'POST': # si intenta hacer una acción sin permiso muestra el mensaje y se bloquea la acción
+                        messages.error(request, 'No tienes permiso para realizar esta acción.')
+                        return redirect(request.path)
                     return view_func(request, *args, **kwargs)
-                
-                # si stay_on_page es False lo manda al login
-                return redirect('login')
+                else:
+                    messages.error(request, 'No tienes permiso para acceder a esta vista.')
+                    return redirect('landing')
 
             # si tiene acceso continua
             return view_func(request, *args, **kwargs)
