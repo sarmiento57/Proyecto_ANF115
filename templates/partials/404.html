@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404</title>
+
+    {% load django_bootstrap5 %} {% bootstrap_css %}
+    <link rel="stylesheet" href="{% static 'css/404.css' %}" />
+  </head>
+  <body>
+    {% block content %}
+    <div class="contenedor">
+      <div class="imagen">
+        <h3>KNIGHT SOLUTIONS</h3>
+        <img
+          src="{% static 'img/404.svg' %}" # estas onda no funciona porque el debug esta false osea toda la 404
+          alt="404 Not Found"
+        />
+      </div>
+
+      <div class="mensaje">
+        <h1>404</h1>
+        <h2>Página no encontrada</h2>
+        <p>
+          Lo sentimos, la página que estás buscando no existe o ha sido movida.
+          Revisa la dirección o regresa al inicio.
+        </p>
+        <a href="{% url 'stela' %}">Volver al Inicio</a>
+      </div>
+    </div>
+    {% endblock %} {% bootstrap_javascript %}
+  </body>
+</html>
