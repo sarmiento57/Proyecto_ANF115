@@ -1,46 +1,38 @@
-// Simple client-side state for demo and Django friendliness
-const companiesEl = document.getElementById('companies');
-const catalogActions = document.getElementById('catalog-actions');
+// Define Nord palette
+const nord = {
+  nord0: '#2e3440',
+  nord1: '#3b4252',
+  nord2: '#4c566a', // your requested background
+  nord3: '#ebcb8b', // line color
+  nord4: '#d8dee9',
+  white: '#ffffff'
+};
 
-// initial companies (empty array -> shows catalog actions)
-let companies = []; // you can preload companies here, e.g. ['Empresa 1']
-
-function renderCompanies(){
-  companiesEl.innerHTML = '';
-  companies.forEach((c, i)=>{
-    const li = document.createElement('li');
-    li.className = 'd-flex justify-content-between align-items-center mb-1';
-    li.innerHTML = `<span>${c}</span><button class="btn btn-sm btn-outline-light btn-select" data-index="${i}">Seleccionar</button>`;
-    companiesEl.appendChild(li);
-  });
-
-  toggleCatalogActions();
-}
-
-function toggleCatalogActions(){
-  // If there is at least one company, hide the floating actions
-  if(companies.length > 0){
-    catalogActions.style.display = 'none';
-  } else {
-    catalogActions.style.display = 'flex';
-  }
-}
-
-// initial render
-renderCompanies();
-
-// Charts (x, x^2, x^3)
-function makeData(func){
+// Utility to generate data
+function makeData(func) {
   const labels = [];
   const data = [];
-  for(let x=-5;x<=5;x+=0.5){
+  for (let x = -5; x <= 5; x += 0.5) {
     labels.push(x);
     data.push(func(x));
   }
-  return {labels, data};
+  return { labels, data };
 }
 
-function makeChart(ctx, func, label){
+// Custom background plugin for Chart.js
+const backgroundPlugin = {
+  id: 'customBackgroundColor',
+  beforeDraw(chart) {
+    const { ctx, chartArea } = chart;
+    ctx.save();
+    ctx.fillStyle = nord.nord2; // background color for chart
+    ctx.fillRect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
+    ctx.restore();
+  }
+};
+
+// Chart generator
+function makeChart(ctx, func, label) {
   const d = makeData(func);
   return new Chart(ctx, {
     type: 'line',
@@ -51,26 +43,35 @@ function makeChart(ctx, func, label){
         data: d.data,
         tension: 0.3,
         fill: false,
-        pointRadius: 0.5,
+        borderWidth: 2,
+        borderColor: nord.nord3, // line color
+        pointRadius: 0,          // hide points
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins:{
-        legend:{display:false}
+      plugins: {
+        legend: { display: false },
       },
       scales: {
-        x: { display: true },
-        y: { display: true }
+        x: {
+          ticks: { color: nord.white },
+          grid: { color: nord.white, lineWidth: 0.2 },
+        },
+        y: {
+          ticks: { color: nord.white },
+          grid: { color: nord.white, lineWidth: 0.2 },
+        }
       }
-    }
+    },
+    plugins: [backgroundPlugin]
   });
 }
 
-// create charts when DOM ready
-window.addEventListener('DOMContentLoaded', ()=>{
-  makeChart(document.getElementById('chart-x').getContext('2d'), x=>x, 'x');
-  makeChart(document.getElementById('chart-x2').getContext('2d'), x=>x*x, 'x^2');
-  makeChart(document.getElementById('chart-x3').getContext('2d'), x=>x*x*x, 'x^3');
+// Create charts when DOM ready
+window.addEventListener('DOMContentLoaded', () => {
+  makeChart(document.getElementById('chart-x').getContext('2d'), x => x, 'x');
+  makeChart(document.getElementById('chart-x2').getContext('2d'), x => x * x, 'x²');
+  makeChart(document.getElementById('chart-x3').getContext('2d'), x => x * x * x, 'x³');
 });
