@@ -13,24 +13,25 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
 }
 
+/* contenedor principal */
 .contenedor {
     display: flex;
     position: relative;
-    width: 820px;
-    min-height: 480px;
+    width: 900px;
+    min-height: 600px;
     background-color: #ffffff;
     border-radius: 20px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     overflow: hidden;
 }
 
-/* seccion izqueirda, imagen */
+/* imagen lateral */
 .imagen {
     position: relative;
-    width: 50%;
+    width: 45%;
     background-color: #5e81ac;
     display: flex;
     align-items: center;
@@ -46,43 +47,29 @@ body {
     opacity: 0.85;
 }
 
-/* titulo arriba de la iamgen */
-.imagen h3 {
-    position: absolute;
-    top: 1%;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: 'Playwrite US Modern', serif;
-    font-size: 2rem;
-    letter-spacing: 2px;
-    text-align: center;
-    z-index: 2;
-    color: #fff;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
-}
-
-/* form */
+/* sección del formulario */
 .formulario {
-    width: 50%;
+    width: 55%;
     padding: 40px 50px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    max-height: 90vh;
 }
 
 .formulario h2 {
-    font-family: 'Poppins', sans-serif;
     font-weight: 600;
     font-size: 2rem;
     color: #2e3440;
     text-align: center;
-    margin-bottom: 50px;
+    margin-bottom: 40px;
 }
 
 /* inputs */
 .input-contenedor {
     position: relative;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .input-contenedor input {
@@ -122,7 +109,7 @@ body {
     font-size: 1.3rem;
 }
 
-/* pass olvidada */
+/* enlaces */
 .olvidar {
     text-align: center;
     margin-top: 10px;
@@ -138,7 +125,7 @@ body {
     text-decoration: underline;
 }
 
-/* boton */
+/* botón */
 button {
     width: 100%;
     height: 45px;
@@ -156,3 +143,12 @@ button:hover {
     transform: scale(1.02);
 }
 
+/* scroll */
+.formulario::-webkit-scrollbar {
+    width: 6px;
+}
+
+.formulario::-webkit-scrollbar-thumb {
+    background: #5e81ac;
+    border-radius: 10px;
+}
