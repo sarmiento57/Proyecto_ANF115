@@ -1,0 +1,101 @@
+:root{
+  /* Nord palette (subset) */
+  --nord0: #2e3440; /* dark */
+  --nord1: #3b4252;
+  --nord3: #5e81ac;
+  --nord4: #d8dee9; /* light */
+  --nord5: #bf616a; /* red */
+  --nord6: #eceff4;
+  --accent: #88c0d0; /* light blue */
+  --nord-graph-bg: #4c566a;
+}
+
+html,body{height:100%;font-family: 'Lato', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;}
+body {
+  background-color: var(--nord0); /* dark background */
+  color: var(--nord6); /* makes text readable on dark background */
+}
+
+
+.app-root{min-height:100vh}
+.sidebar{width:180px;min-height:100vh;position:fixed;left:0;top:0}
+.sidebar.collapsed { width: 80px; }
+main.collapsed { margin-left: 80px; }
+main{margin-left:180px}
+
+#btn-companies {
+  background: none;
+  border: none;
+  color: var(--nord6); /* always white */
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+#link-landing {
+  background: none;
+  border: none;
+  color: var(--nord6); /* always white */
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+#btn-companies:hover {
+  color: var(--nord1); /* light blue on hover */
+  text-decoration: underline;
+}
+
+#btn-companies:focus {
+  outline: none; /* remove focus border */
+  box-shadow: none;
+}
+
+.nav-link.active {
+  /* Anula el color blanco establecido por text-nord6 o cualquier otra regla */
+  color: var(--nord0) !important;
+  opacity: 1; /* Asegura máxima visibilidad */
+}
+
+.sidebar{background:var(--nord3);color:var(--nord6)}
+.sidebar .brand{font-weight:700;font-size:1.1rem}
+.nav-link{color:var(--nord6);opacity:0.9}
+.nav-link.active{background:rgba(255,255,255,0.03);border-radius:8px}
+
+.chart-card canvas{max-height:200px}
+
+.catalog-actions{position:absolute;right:1rem;bottom:1rem}
+.catalog-actions .btn{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+
+/* small screens adjustments */
+@media (max-width: 768px){
+  .sidebar{position:relative;width:100%;min-height:auto}
+  main{margin-left:0}
+  .chart-card{height:auto}
+}
+
+.chart-card {
+  height: 260px;
+  background-color: var(--nord-graph-bg);
+  color: var(--nord6); /* ensures text like h6 is readable */
+  border: none; /* remove card border if you want a flat look */
+  border-radius: 8px; /* optional, match your sidebar/card style */
+}
+
+.chart-card canvas {
+  max-height: 200px;
+  background-color: transparent; /* chart plugin sets bg separately */
+}
+
+.chart-card h6 {
+  color: var(--nord6); /* white/light text */
+  margin-bottom: 0.5rem;
+}
+
+.header-catalogo {
+    text-align: center;
+    padding-bottom: 15px;
+    font-family: 'Lato', 'Helvetica', 'Arial', sans-serif;
+    font-weight: 500; /* medium weight for readability */
+    font-size: 24px; /* adjust as needed */
+}
