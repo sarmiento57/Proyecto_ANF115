@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'stela',
     'accounts',
-    'tools',
    
 ]
 
