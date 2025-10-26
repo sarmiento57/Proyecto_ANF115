@@ -28,7 +28,6 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path("stela/", include("stela.urls")),
     path('admin/', admin.site.urls),
-    path('tools/',include("tools.urls"))
 ]
 
 # Pagina 404 aun no funciona porque estamos en debug

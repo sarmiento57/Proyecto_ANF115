@@ -8,3 +8,7 @@ def landing(request):
 @login_required
 def dashboard(request):
     return render(request, "dashboard/dashboard.html")
+
+
+def tools(request):
+    return render(request, "tools/tools.html")
