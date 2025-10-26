@@ -16,7 +16,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Redirecciones despues de login/logout
-LOGIN_REDIRECT_URL = '/stela'
+LOGIN_REDIRECT_URL = '/stela/dashboard'
 LOGOUT_REDIRECT_URL = '/stela'
 
 # heredar de CustomUser
