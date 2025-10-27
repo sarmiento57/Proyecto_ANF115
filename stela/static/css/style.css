@@ -201,3 +201,39 @@ body {
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
 }
+/* ============================================= */
+/* ==      ESTILOS PARA LA CAJA DE MENSAJES    == */
+/* ============================================= */
+
+/* Contenedor principal para posicionamiento */
+#errorBox {
+  /* --- 1. POSICIONAMIENTO Y CAPAS --- */
+  position: fixed;   /* Fija la caja en la pantalla, incluso al hacer scroll */
+  top: 90px;         /* Espacio desde arriba (ajusta esto si tu header es más alto/bajo) */
+  right: 20px;        /* Espacio desde la derecha */
+  z-index: 1050;      /* IMPORTANTE: Un valor ALTO para que esté sobre todo (el header tiene 1030) */
+
+  /* --- 2. DIMENSIONES Y APARIENCIA --- */
+  min-width: 300px; /* Ancho mínimo para que no se vea apretado */
+  max-width: 450px; /* Ancho máximo para pantallas grandes */
+}
+
+/* Estilo para las alertas DENTRO del contenedor */
+#errorBox .alert {
+  /* Aquí no definimos 'color' para el texto. 
+    Dejamos que Bootstrap (.alert-danger, .alert-success) 
+    lo controle para evitar conflictos.
+  */
+  box-shadow: 0 4px 12px rgba(46, 52, 64, 0.2); /* Sombra para que "flote" y destaque */
+  border-radius: 0.5rem; /* Bordes redondeados */
+  margin-bottom: 1rem;   /* Espacio entre múltiples notificaciones */
+  display: flex;         /* Para alinear el botón de cierre */
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* El párrafo del mensaje */
+#errorBox .alert p {
+  margin-bottom: 0; /* Quitamos el margen por defecto del párrafo */
+  padding-right: 1rem; /* Espacio para que el texto no se pegue al botón de cierre */
+}
