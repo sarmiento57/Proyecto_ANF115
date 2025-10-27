@@ -1,0 +1,125 @@
+:root{
+  /* Nord palette (subset) */
+  --nord0: #2e3440; /* dark */
+  --nord1: #3b4252;
+  --nord3: #5e81ac;
+  --nord4: #d8dee9; /* light */
+  --nord5: #bf616a; /* red */
+  --nord6: #eceff4;
+  --nord7: #ebcb8b;
+  --accent: #88c0d0; /* light blue */
+  --nord-graph-bg: #4c566a;
+}
+
+html,body{height:100%;font-family: 'Lato', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;}
+body {
+  background-color: var(--nord0); /* dark background */
+  color: var(--nord6); /* makes text readable on dark background */
+}
+
+
+.app-root{min-height:100vh}
+.sidebar{width:180px;min-height:100vh;position:fixed;left:0;top:0}
+.sidebar.collapsed { width: 80px; }
+main.collapsed { margin-left: 80px; }
+main{margin-left:180px}
+
+#btn-companies {
+  background: none;
+  border: none;
+  color: var(--nord6); /* always white */
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+#link-landing {
+  background: none;
+  border: none;
+  color: var(--nord6); /* always white */
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+#btn-companies:hover {
+  color: var(--nord1); /* light blue on hover */
+  text-decoration: underline;
+}
+
+#btn-companies:focus {
+  outline: none; /* remove focus border */
+  box-shadow: none;
+}
+
+.nav-link.active {
+  /* Anula el color blanco establecido por text-nord6 o cualquier otra regla */
+  color: var(--nord0) !important;
+  opacity: 1; /* Asegura máxima visibilidad */
+}
+
+.sidebar{background:var(--nord3);color:var(--nord6)}
+.sidebar .brand{font-weight:700;font-size:1.1rem}
+.nav-link{color:var(--nord6);opacity:0.9}
+.nav-link.active{background:rgba(255,255,255,0.03);border-radius:8px}
+
+
+/* --- Empresas Pop-up Specific Styles (Revised for Dynamic Width) --- */
+
+/* Wrapper needs relative positioning for the pop-up */
+.company-list-wrapper {
+    position: relative;
+    z-index: 1000;
+}
+
+/* Style for the pop-up box */
+.empresas-popup-content {
+    /* Key positioning properties */
+    position: absolute;
+    bottom: 100%;
+    padding: 6px 10px !important;
+
+    /* Center the pop-up horizontally above the button area */
+    /* Adjust 'left' slightly to align with the start of the 'Empresas' text */
+    left: -5px;
+
+    /* *** DYNAMIC WIDTH CHANGE: Remove fixed width constraint *** */
+    /* Use max-content or simply remove width property for dynamic sizing */
+    width: max-content;
+    max-width: 250px; /* Optional: Set a maximum width so it doesn't get too wide */
+
+    /* Appearance */
+    background-color: var(--nord0);
+    color: var(--nord6);
+    border: 1px solid var(--nord7);
+    margin-bottom: 5px;
+}
+
+/* Style for links inside the pop-up */
+.empresas-popup-content .company-link {
+    color: var(--nord6) !important;
+    padding-right: 10px;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    /* Allows long names to shrink if max-width is hit */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Style for the trash can button (remains the same) */
+.btn-delete-company {
+    background: none;
+    border: none;
+    padding: 0 5px;
+    line-height: 1;
+    color: var(--nord5);
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.btn-delete-company:hover {
+    color: var(--nord5);
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}

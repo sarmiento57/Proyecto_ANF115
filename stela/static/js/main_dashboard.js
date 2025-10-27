@@ -1,13 +1,3 @@
-// Define Nord palette
-const nord = {
-  nord0: '#2e3440',
-  nord1: '#3b4252',
-  nord2: '#4c566a', // your requested background
-  nord3: '#ebcb8b', // line color
-  nord4: '#d8dee9',
-  white: '#ffffff'
-};
-
 // Utility to generate data
 function makeData(func) {
   const labels = [];
@@ -75,3 +65,7 @@ window.addEventListener('DOMContentLoaded', () => {
   makeChart(document.getElementById('chart-x2').getContext('2d'), x => x * x, 'x²');
   makeChart(document.getElementById('chart-x3').getContext('2d'), x => x * x * x, 'x³');
 });
+
+
+
+

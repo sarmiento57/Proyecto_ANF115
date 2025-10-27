@@ -6,6 +6,7 @@
   --nord4: #d8dee9; /* light */
   --nord5: #bf616a; /* red */
   --nord6: #eceff4;
+  --nord7: #ebcb8b;
   --accent: #88c0d0; /* light blue */
   --nord-graph-bg: #4c566a;
 }
@@ -16,51 +17,6 @@ body {
   color: var(--nord6); /* makes text readable on dark background */
 }
 
-
-.app-root{min-height:100vh}
-.sidebar{width:180px;min-height:100vh;position:fixed;left:0;top:0}
-.sidebar.collapsed { width: 80px; }
-main.collapsed { margin-left: 80px; }
-main{margin-left:180px}
-
-#btn-companies {
-  background: none;
-  border: none;
-  color: var(--nord6); /* always white */
-  font-weight: 700;
-  cursor: pointer;
-  text-align: left;
-}
-
-#link-landing {
-  background: none;
-  border: none;
-  color: var(--nord6); /* always white */
-  font-weight: 700;
-  cursor: pointer;
-  text-align: left;
-}
-
-#btn-companies:hover {
-  color: var(--nord1); /* light blue on hover */
-  text-decoration: underline;
-}
-
-#btn-companies:focus {
-  outline: none; /* remove focus border */
-  box-shadow: none;
-}
-
-.nav-link.active {
-  /* Anula el color blanco establecido por text-nord6 o cualquier otra regla */
-  color: var(--nord0) !important;
-  opacity: 1; /* Asegura máxima visibilidad */
-}
-
-.sidebar{background:var(--nord3);color:var(--nord6)}
-.sidebar .brand{font-weight:700;font-size:1.1rem}
-.nav-link{color:var(--nord6);opacity:0.9}
-.nav-link.active{background:rgba(255,255,255,0.03);border-radius:8px}
 
 .chart-card canvas{max-height:200px}
 
@@ -99,3 +55,4 @@ main{margin-left:180px}
     font-weight: 500; /* medium weight for readability */
     font-size: 24px; /* adjust as needed */
 }
+
