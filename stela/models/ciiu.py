@@ -3,7 +3,7 @@ from django.db import models
 
 class Ciuu(models.Model):
 
-    codigo = models.CharField(max_length=5, primary_key=True)
+    codigo = models.CharField(max_length=10, primary_key=True)
     descripcion = models.CharField(max_length=255)
     nivel = models.IntegerField()
     padre = models.ForeignKey(

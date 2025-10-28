@@ -7,6 +7,9 @@ from accounts.decorators import access_required
 def landing(request):
     return render(request, "stela/landing.html")
 
-@access_required('010')
+
 def dashboard(request):
     return render(request, "dashboard/dashboard.html")
+
+def crearEmpresa(request):
+    return render(request, "stela/base.html")
