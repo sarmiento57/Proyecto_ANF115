@@ -3,3 +3,4 @@
 #crea los modelos dentro de este paquete
 from .empresa import *
 from .ciiu import *
+from .venta import *

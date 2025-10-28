@@ -27,7 +27,7 @@ VALUES
 
 
 
--- Insertar opciones del formulario
+-- Insertar opciones del formulario para las vistas principales
 INSERT INTO accounts_optionform (optionId, description, formNumber)
 VALUES
 ('010', 'Dashboard', 0),
@@ -36,8 +36,50 @@ VALUES
 ('014', 'Empresas', 3),
 ('015', 'Ratios Generales por tipo de Empresa', 4),
 ('016', 'Panel de Administración', 5),
-('017', 'Tools', 6);
+('017', 'Tools', 6),
+('018', 'Perfiles de Usuario', 7),
+('019', 'Cuentas', 8);
 
+
+-- Insertar opciones del formulario catalogo opciones botones
+INSERT INTO accounts_optionform (optionId, description, formNumber)
+VALUES
+('030', 'Agregar cuenta de catalogo', 30),
+('031', 'Editar cuenta de catalogo', 31),
+('032', 'Eliminar cuenta de catalogo', 32),
+('033', 'Ver catalogo de cuentas', 33),
+-- Boton para cargar catalogo desde un excel
+('034', 'Cargar catalogo desde Excel', 34);
+
+-- Insertar opciones del formulario tipos de empresa botones
+INSERT INTO accounts_optionform (optionId, description, formNumber)
+VALUES
+('040', 'Agregar tipo de empresa', 40),
+('041', 'Editar tipo de empresa', 41),
+('042', 'Eliminar tipo de empresa', 42),
+('043', 'Ver tipos de empresa', 43);
+
+
+-- Insertar opciones del formulario empresas botones
+INSERT INTO accounts_optionform (optionId, description, formNumber)
+VALUES
+('050', 'Agregar empresa', 50),
+('051', 'Editar empresa', 51),
+('052', 'Eliminar empresa', 52),
+('053', 'Ver empresas', 53);
+
+-- Insertar opciones del formulario perfiles botones
+INSERT INTO accounts_optionform (optionId, description, formNumber)
+VALUES
+('060', 'Agregar perfil de usuario', 60),
+('061', 'Editar perfil de usuario', 61),
+('062', 'Eliminar perfil de usuario', 62),
+('063', 'Ver perfiles de usuario', 63);
+
+-- Insertar opciones del formulario señalar cuentas seleccionadas
+INSERT INTO accounts_optionform (optionId, description, formNumber)
+VALUES
+('070', 'Señalar cuentas seleccionadas', 70);
 
 
 -- Insertar accesos de usuario
