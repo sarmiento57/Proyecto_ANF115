@@ -1,0 +1,199 @@
+/* =========================================================
+   Stela Tools – Azul Pizarra (matching primera captura)
+   ========================================================= */
+
+/* ---------- Tokens de diseño ---------- */
+:root{
+  /* Fondo general */
+  --bg-0: #1d2632;    /* fondo lejano */
+  --bg-1: #222e3e;    /* fondo principal */
+  /* Superficies / tarjetas */
+  --surf-1:#2a394e;   /* panel / card */
+  --surf-2:#32445d;   /* hover/selected */
+  /* Bordes y líneas */
+  --line:  #3a4c66;
+  --line-2:#425a78;
+  /* Tipografía */
+  --txt:      #e8eef7;
+  --txt-dim:  #a6b4c8;
+  --txt-muted:#93a3ba;
+  /* Acentos */
+  --accent:   #8fb4ff;  /* azul claro */
+  --accent-2: #d8b25a;  /* dorado (líneas de gráfica/acentos sutiles) */
+  /* Curvas y sombras */
+  --r-lg: 16px;
+  --r-md: 12px;
+  --shadow-1: 0 6px 18px rgba(7,12,20,.25);
+  --shadow-2: 0 10px 30px rgba(7,12,20,.35);
+}
+
+/* ---------- Reset mínimo ---------- */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  color:var(--txt);
+  background: radial-gradient(1000px 520px at 10% 0%, #1a2330 0, var(--bg-1) 45%, #1e2734 100%);
+  font: 15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+/* ---------- Contenedor ---------- */
+.wrap{
+  max-width:1120px;
+  margin:24px auto 48px;
+  padding:0 16px;
+}
+
+/* =========================================================
+   TABS accesibles (tu HTML ya usa roles/aria)
+   ========================================================= */
+.tabs{
+  display:inline-flex;
+  gap:10px;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(40,55,77,.42);
+  box-shadow: var(--shadow-1);
+  backdrop-filter: blur(2px);
+}
+.tab{
+  appearance:none;
+  border:1px solid var(--line);
+  background:#2b3a50;
+  color:var(--txt);
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:700;
+  letter-spacing:.2px;
+  cursor:pointer;
+  transition:background .18s ease, transform .08s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.tab:hover{ background:var(--surf-2); transform:translateY(-1px); }
+.tab:focus-visible{ outline:2px solid #9cc0ff; outline-offset:2px; }
+.tab[aria-selected="true"]{
+  background: linear-gradient(180deg, #364a67, #2e405a);
+  border-color: var(--line-2);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.05) inset, var(--shadow-2);
+}
+
+/* Separador bajo los tabs (como una “rule” sutil) */
+.tabs + *{
+  border-top:1px solid rgba(255,255,255,.06);
+  margin-top:12px;
+  padding-top:12px;
+}
+
+/* =========================================================
+   PANELS (cards)
+   ========================================================= */
+.panel{
+  margin-top:18px;
+  background: var(--surf-1);
+  border:1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  padding:14px;
+}
+.panel.active{ box-shadow: var(--shadow-2); }
+.panel h3{
+  margin:6px 0 12px;
+  font-weight:800;
+  color:#fff;
+  letter-spacing:.2px;
+}
+
+/* =========================================================
+   TABLAS (zebra + cabecera azul)
+   ========================================================= */
+.table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  background:#243246;
+  border:1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow:hidden; /* asegura redondeo cabecera */
+}
+.table thead th{
+  background:#2e3f59;  /* cabecera más azul */
+  color:#f1f5fb;
+  text-align:left;
+  font-weight:800;
+  padding:12px 14px;
+  border-bottom:1px solid #3f5270;
+  position:sticky; top:0; z-index:1;
+}
+.table tbody td{
+  padding:12px 14px;
+  color:var(--txt);
+  border-bottom:1px solid rgba(255,255,255,.035);
+}
+.table.zebra tbody tr:nth-child(even){ background: rgba(143,180,255,.045); }
+.table tbody tr:hover{ background: rgba(143,180,255,.12); }
+.muted{ color:var(--txt-muted); }
+
+/* Celdas numéricas utilitarias (si las usas) */
+.right{ text-align:right; }
+.center{ text-align:center; }
+.nowrap{ white-space:nowrap; }
+
+/* =========================================================
+   GRILLAS DE GRÁFICAS (por si agregas los 3 cards superiores)
+   ========================================================= */
+.grid-plots{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:14px;
+  margin-top:18px;
+  margin-bottom:18px;
+}
+.card-plot{
+  background:#2b3a50;
+  border:1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  padding:12px;
+  min-height:180px;
+}
+.card-plot h4{
+  margin:0 0 8px;
+  font-weight:700;
+  color:#eaf0f9;
+}
+
+/* =========================================================
+   ALERTS (partials/messages.html)
+   ========================================================= */
+.alert{
+  margin:10px 0 16px;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.25);
+  box-shadow: var(--shadow-1);
+}
+.alert-success{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.1); color:#d1fae5; }
+.alert-error  { border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.1); color:#fee2e2; }
+.alert-info   { border-color: rgba(96,165,250,.35); background: rgba(96,165,250,.1); color:#dbeafe; }
+
+/* =========================================================
+   ENLACES / enfoque
+   ========================================================= */
+a{ color:#9abaff; text-decoration:none; }
+a:hover{ color:#bcd0ff; text-decoration:underline; }
+:focus-visible{ outline:2px solid #9cc0ff; outline-offset:2px; }
+
+/* =========================================================
+   RESPONSIVO
+   ========================================================= */
+@media (max-width: 960px){
+  .wrap{ padding:0 12px; }
+  .grid-plots{ grid-template-columns:1fr; }
+  .tab{ padding:9px 12px; }
+  .table thead th, .table tbody td{ padding:10px 12px; }
+}
+@media (max-width: 560px){
+  .tabs{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .tab{ width:100%; }
+}

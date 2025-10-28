@@ -1,13 +1,3 @@
-// Define Nord palette
-const nord = {
-  nord0: '#2e3440',
-  nord1: '#3b4252',
-  nord2: '#4c566a', // your requested background
-  nord3: '#ebcb8b', // line color
-  nord4: '#d8dee9',
-  white: '#ffffff'
-};
-
 // Utility to generate data
 function makeData(func) {
   const labels = [];
@@ -75,3 +65,31 @@ window.addEventListener('DOMContentLoaded', () => {
   makeChart(document.getElementById('chart-x2').getContext('2d'), x => x * x, 'x²');
   makeChart(document.getElementById('chart-x3').getContext('2d'), x => x * x * x, 'x³');
 });
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tableBody = document.querySelector('#catalog-table tbody');
+    const catalogActions = document.getElementById('catalog-actions');
+    const parentCard = catalogActions ? catalogActions.closest('.card') : null;
+
+    // Ensure all elements exist before proceeding
+    if (!tableBody || !catalogActions || !parentCard) {
+        console.error("Missing required elements: #catalog-table tbody, #catalog-actions, or parent .card");
+        return;
+    }
+
+    // Determine if the table body has no child rows
+    const isTableEmpty = tableBody.children.length === 0;
+
+    if (isTableEmpty) {
+        // Apply classes for the centered state
+        catalogActions.classList.add('is-centered');
+        parentCard.classList.add('is-empty-catalog');
+    } else {
+        // Ensure classes are removed if content is present
+        catalogActions.classList.remove('is-centered');
+        parentCard.classList.remove('is-empty-catalog');
+    }
+});
+
+

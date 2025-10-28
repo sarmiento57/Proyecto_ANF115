@@ -6,6 +6,7 @@
   --nord4: #d8dee9; /* light */
   --nord5: #bf616a; /* red */
   --nord6: #eceff4;
+  --nord7: #ebcb8b;
   --accent: #88c0d0; /* light blue */
   --nord-graph-bg: #4c566a;
 }
@@ -14,53 +15,28 @@ html,body{height:100%;font-family: 'Lato', system-ui, -apple-system, 'Segoe UI',
 body {
   background-color: var(--nord0); /* dark background */
   color: var(--nord6); /* makes text readable on dark background */
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-
-.app-root{min-height:100vh}
-.sidebar{width:180px;min-height:100vh;position:fixed;left:0;top:0}
-.sidebar.collapsed { width: 80px; }
-main.collapsed { margin-left: 80px; }
-main{margin-left:180px}
-
-#btn-companies {
-  background: none;
-  border: none;
-  color: var(--nord6); /* always white */
-  font-weight: 700;
-  cursor: pointer;
-  text-align: left;
+/* Step 2: Ensure the main wrapper element (e.g., a Django base template content area)
+   also takes full height and uses Flexbox for main content layout.
+   Assuming the catalog is inside a main content wrapper (e.g., #content-wrapper) */
+#content-wrapper {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
-#link-landing {
-  background: none;
-  border: none;
-  color: var(--nord6); /* always white */
-  font-weight: 700;
-  cursor: pointer;
-  text-align: left;
+.full-height-container {
+    /* Use flexbox to manage vertical space within the section */
+    display: flex;
+    flex-direction: column;
+    /* This ensures the section fills all remaining space in #content-wrapper */
+    flex-grow: 1;
 }
 
-#btn-companies:hover {
-  color: var(--nord1); /* light blue on hover */
-  text-decoration: underline;
-}
-
-#btn-companies:focus {
-  outline: none; /* remove focus border */
-  box-shadow: none;
-}
-
-.nav-link.active {
-  /* Anula el color blanco establecido por text-nord6 o cualquier otra regla */
-  color: var(--nord0) !important;
-  opacity: 1; /* Asegura máxima visibilidad */
-}
-
-.sidebar{background:var(--nord3);color:var(--nord6)}
-.sidebar .brand{font-weight:700;font-size:1.1rem}
-.nav-link{color:var(--nord6);opacity:0.9}
-.nav-link.active{background:rgba(255,255,255,0.03);border-radius:8px}
 
 .chart-card canvas{max-height:200px}
 
@@ -98,4 +74,128 @@ main{margin-left:180px}
     font-family: 'Lato', 'Helvetica', 'Arial', sans-serif;
     font-weight: 500; /* medium weight for readability */
     font-size: 24px; /* adjust as needed */
+}
+
+
+/* --- 1. Default State: HIDDEN (Table has content) --- */
+.catalog-actions {
+  /* Hides the buttons by default when they are supposed to be floating. */
+  display: none !important;
+
+  /* The original positioning properties are now irrelevant but can be kept
+     if you plan to re-enable floating in the future. */
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 5;
+}
+
+/* --- 2. Empty State: Centered and VISIBLE (Table is empty) --- */
+.catalog-actions.is-centered {
+  /* This rule overrides 'display: none' above and makes the buttons visible
+     while centering them. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  /* This is what makes the buttons visible */
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+
+  background-color: var(--nord1);
+  z-index: 10;
+}
+
+/* --- 3. UX Improvement for Empty State --- */
+.card.is-empty-catalog {
+    min-height: 250px;
+}
+.card.is-empty-catalog .table-responsive {
+    display: none;
+}
+
+/* Target the card that contains the table */
+.card {
+    /* ... existing flex properties ... */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    background-color: var(--nord1) !important;
+    color: var(--nord6);
+    padding: 1rem !important;
+    border: none;
+
+    /* 👇 NEW: Add rounded corners to the card 👇 */
+    border-radius: 8px;
+    /* Important: Ensure anything inside the card that might overflow
+       is clipped to the rounded edges */
+    overflow: hidden;
+}
+
+/* Target the table-responsive wrapper */
+.table-responsive {
+    /* The core step: Make the table wrapper fill the available vertical space
+       between the table header and the bottom of the card */
+    flex-grow: 1;
+    /* The second core step: This enables vertical scrolling within this div
+       ONLY when the content (the table body) exceeds the div's height */
+    overflow-y: auto;
+  background-color: transparent;
+}
+
+/* If you have floating buttons, their positioning will need adjustment */
+.catalog-actions {
+    /* Keep this at the bottom of the visible table area */
+    position: sticky;
+    bottom: 1rem;
+    /* Adjust as necessary based on whether you want them *inside* the scrollable area or not. */
+    /* If you want them outside the scrollable area, keep them positioned relative to the card. */
+}
+
+/* Table Base Style - Removes general text color setting */
+.table {
+    /* Keep the border, but allow rows to define their own colors */
+    border-color: var(--nord0);
+    --bs-table-bg: transparent; /* Ensure no overriding background here */
+    color: inherit; /* Let rows define text color */
+}
+
+/* Table Header (thead.table-light) */
+.table-light,
+.table-light th {
+    /* Header background is darkest Nord color */
+    --bs-table-bg: var(--nord0);
+    /* Header text should be light for high contrast */
+    color: var(--nord6);
+    --bs-table-color: var(--nord6);
+}
+/* --- EVEN ROWS (2, 4, 6, etc.) --- */
+.table tbody tr:nth-child(even) > * {
+    /* Darker Background: Use the card's background color */
+    background-color: var(--nord1);
+    /* Light Text: Ensures readability on the dark background */
+    color: var(--nord6);
+}
+
+/* --- ODD ROWS (1, 3, 5, etc.) / Striped Rows --- */
+.table tbody tr:nth-child(odd) > * {
+    /* Lighter Background: Use a light Nord color */
+    background-color: var(--nord4);
+    /* Dark Text: Ensures readability on the light background */
+    color: var(--nord0);
+}
+
+/* Ensure the striped rule doesn't conflict with our explicit odd/even rules */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    /* Use 'initial' or 'unset' to clear the Bootstrap striping variable
+       if the explicit rules above don't fully override it. */
+    --bs-table-bg-type: initial;
+
+    /* However, using the explicit nth-child(odd) should override this,
+       so this block might be unnecessary if you apply the odd/even rules directly. */
 }

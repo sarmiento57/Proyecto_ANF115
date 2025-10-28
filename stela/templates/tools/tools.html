@@ -5,9 +5,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Análisis de Empresas – Tabs</title>
-  <link rel="stylesheet" href="{% static 'tools/css/style.css'%}">
+  <link rel="stylesheet" href="{% static '/css/toolsstyle.css'%}">
+  <link rel="stylesheet" href="{% static 'css/error-box.css'%}">
 </head>
 <body>
+   
+    {% include 'partials/messages.html' %}
   <div class="wrap">
     <div class="tabs" role="tablist" aria-label="Análisis de empresas">
       <button class="tab" role="tab" id="tab-hz" aria-controls="panel-hz" aria-selected="true">Análisis Horizontal</button>
@@ -23,8 +26,8 @@
             <th>Cuenta</th>
             <th>Año X</th>
             <th>Año X+1</th>
-            <th>Cambio</th>
-            <th>Porcentual</th>
+           <th>Variación absoluta</th>
+           <th>Variación relativa</th>
             <th>Estado</th>
           </tr>
         </thead>
@@ -65,7 +68,7 @@
       <table class="table zebra" aria-label="Razones de Liquidez">
         <thead>
           <tr>
-            <th>Razón</th><th>Año X</th><th>Año X+1</th><th>Cambio</th><th>Porcentual</th><th>Estandar</th><th>Desviación</th><th>Gravedad</th>
+            <th>Razón</th><th>Año X</th><th>Año X+1</th><th>Variación absoluta</th><th>Variación relativa</th><th>Estandar</th><th>Desviación</th><th>Gravedad</th>
           </tr>
         </thead>
         <tbody>
