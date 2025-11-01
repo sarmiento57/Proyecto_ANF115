@@ -1,26 +1,36 @@
-# stela/services/estados.py
 from decimal import Decimal
-from collections import defaultdict
-from stela.models.estados import EstadoValor, LineaEstado
+from django.db.models import Sum
+from stela.models.finanzas import Balance, BalanceDetalle, LineaEstado, MapeoCuentaLinea
 
-def estado_dict(empresa, estado, anio, mes=None):
-    """
-    Retorna: {clave: {"nombre":..., "monto": Decimal, "base":bool}}
-    Suma duplicados si los hay.
-    """
-    qs = EstadoValor.objects.filter(empresa=empresa, estado=estado, anio=anio)
-    if mes is not None:
-        qs = qs.filter(mes=mes)
-    data = defaultdict(lambda: {"nombre":"", "monto": Decimal('0'), "base": False})
-    bases = {le.clave for le in LineaEstado.objects.filter(estado=estado, base_vertical=True)}
-    nombres = {le.clave: le.nombre for le in LineaEstado.objects.filter(estado=estado)}
+def recalcular_saldos_detalle(balance: Balance):
+    """Si importas debe/haber, calcula saldo según naturaleza del grupo."""
+    detalles = BalanceDetalle.objects.filter(balance=balance).select_related('cuenta__grupo')
+    bulk = []
+    for d in detalles:
+        nat = d.cuenta.grupo.naturaleza
+        if nat in ('A','G'):
+            d.saldo = (d.debe or 0) - (d.haber or 0)
+        else:
+            d.saldo = (d.haber or 0) - (d.debe or 0)
+        bulk.append(d)
+    BalanceDetalle.objects.bulk_update(bulk, ['saldo'])
 
-    for row in qs:
-        k = row.clave
-        data[k]["nombre"] = row.nombre or nombres.get(k, k)
-        data[k]["monto"]  += Decimal(row.monto)
-        data[k]["base"]    = k in bases
-    # si plantilla tiene claves sin datos, incluirlas en 0 (opcional)
-    for le in LineaEstado.objects.filter(estado=estado):
-        data.setdefault(le.clave, {"nombre": le.nombre, "monto": Decimal('0'), "base": le.base_vertical})
-    return dict(data)
+def estado_dict(empresa, periodo, tipo_estado):
+    """
+    Devuelve {clave: {'nombre', 'monto', 'base'}}
+    suma los saldos de las cuentas mapeadas a cada línea.
+    """
+    bal = Balance.objects.get(empresa=empresa, periodo=periodo, tipo_balance=tipo_estado)
+    # Pre-indexar detalle por cuenta para velocidad
+    detalles = BalanceDetalle.objects.filter(balance=bal).select_related('cuenta')
+    by_cuenta = {d.cuenta_id: d for d in detalles}
+    data = {}
+    for le in LineaEstado.objects.filter(estado=tipo_estado):
+        total = Decimal('0')
+        for map_ in MapeoCuentaLinea.objects.filter(linea=le).only('cuenta_id','signo'):
+            det = by_cuenta.get(map_.cuenta_id)
+            if not det:
+                continue
+            total += (det.saldo or 0) * map_.signo
+        data[le.clave] = {'nombre': le.nombre, 'monto': total, 'base': le.base_vertical}
+    return data
