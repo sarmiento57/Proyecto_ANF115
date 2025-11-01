@@ -36,6 +36,13 @@ from openpyxl import load_workbook
 
 from .forms.EmpresaForm import EmpresaForm,EmpresaEditForm
 
+from django.db import transaction
+from stela.services.ratios import calcular_ratios
+
+from django.http import JsonResponse
+from stela.models.finanzas import RatioDef, ResultadoRatio
+from django.db.models import Prefetch
+
 # Create your views here.
 def landing(request):
     return render(request, "stela/landing.html")
@@ -989,3 +996,146 @@ def descargar_plantilla_estados_excel(request, catalogo_id):
     )
     response['Content-Disposition'] = f'attachment; filename="plantilla_estados_{catalogo.empresa.nit}.xlsx"'
     return response
+
+def inf_vertical(request):
+    empresa_nit = request.GET.get("empresa")
+    periodo_id  = request.GET.get("periodo")
+    estado      = request.GET.get("estado", "BAL")  # BAL | RES
+
+    empresa = get_object_or_404(Empresa, nit=empresa_nit)
+    periodo = get_object_or_404(Periodo, pk=periodo_id, empresa=empresa)
+
+    data = analisis_vertical(empresa, periodo, estado)
+    ctx = {"empresa": empresa, "periodo": periodo, "estado": estado, "filas": data}
+    return render(request, "informes/vertical.html", ctx)
+
+# ---- INFORME: Análisis Horizontal ----
+def inf_horizontal(request):
+    empresa_nit = request.GET.get("empresa")
+    base_id     = request.GET.get("base")
+    actual_id   = request.GET.get("actual")
+    estado      = request.GET.get("estado", "BAL")
+
+    empresa = get_object_or_404(Empresa, nit=empresa_nit)
+    periodo_base  = get_object_or_404(Periodo, pk=base_id, empresa=empresa)
+    periodo_act   = get_object_or_404(Periodo, pk=actual_id, empresa=empresa)
+
+    filas = analisis_horizontal(empresa, periodo_base, periodo_act, estado)
+    ctx = {"empresa": empresa, "estado": estado, "base": periodo_base, "actual": periodo_act, "filas": filas}
+    return render(request, "informes/horizontal.html", ctx)
+
+# ---- INFORME: Ratios ----
+@transaction.atomic
+def inf_ratios(request):
+    empresa_nit = request.GET.get("empresa")
+    periodo_id  = request.GET.get("periodo")
+
+    empresa = get_object_or_404(Empresa, nit=empresa_nit)
+    periodo = get_object_or_404(Periodo, pk=periodo_id, empresa=empresa)
+
+    # Asegura que los ratios estén calculados para este periodo
+    resultados = calcular_ratios(empresa, periodo)  # devuelve lista [{clave,nombre,valor}, ...]
+
+    ctx = {"empresa": empresa, "periodo": periodo, "resultados": resultados}
+    return render(request, "informes/ratios.html", ctx)
+
+# ---- INFORME: Benchmark por CIIU (promedios del sector) ----
+def inf_benchmark(request):
+    empresa_nit = request.GET.get("empresa")
+    periodo_id  = request.GET.get("periodo")
+
+    empresa = get_object_or_404(Empresa, nit=empresa_nit)
+    periodo = get_object_or_404(Periodo, pk=periodo_id)
+    if not empresa.ciiu:
+        messages.warning(request, "La empresa no tiene CIIU asociado.")
+        return redirect("dashboard")
+
+    bench = benchmarking_por_ciiu(empresa.ciiu, periodo)   # {clave: {nombre,promedio,desv}}
+    propios = {r["clave"]: r for r in calcular_ratios(empresa, periodo)}
+    # Unimos y aplicamos semáforo
+    filas = []
+    for clave, meta in bench.items():
+        propio = propios.get(clave, {"valor": None})
+        etiqueta = etiqueta_semaforo(propio["valor"], meta["promedio"], meta["desv"])
+        filas.append({
+            "clave": clave,
+            "nombre": meta["nombre"],
+            "valor": propio["valor"],
+            "promedio": meta["promedio"],
+            "desv": meta["desv"],
+            "semaforo": etiqueta,
+        })
+
+    ctx = {"empresa": empresa, "periodo": periodo, "filas": filas, "ciiu": empresa.ciiu}
+    return render(request, "informes/benchmark.html", ctx)
+
+def _ultimos_periodos(empresa, n=3):
+    # Devuelve los últimos n periodos (por año) para la empresa
+    return list(
+        Periodo.objects.filter(empresa=empresa)
+        .order_by("-anio")[:n]
+        .values_list("id_periodo", "anio")
+    )[::-1]  # ascendentes por año
+
+def ratios_series_json(request):
+    """
+    JSON con series de 5 ratios para los últimos 3 años de una empresa.
+    GET: ?empresa=<NIT>&claves=LIQ_CORR,PRUEBA_ACIDA,ENDEUDAMIENTO,MARGEN_NETO,ROA&n=3
+    """
+    empresa_nit = request.GET.get("empresa")
+    n = int(request.GET.get("n", 3))
+
+    # ratios por defecto (ajusta a tus claves reales si difieren)
+    default_claves = ["LIQ_CORR", "PRUEBA_ACIDA", "ENDEUDAMIENTO", "MARGEN_NETO", "ROA"]
+    claves = request.GET.get("claves", ",".join(default_claves)).split(",")
+
+    empresa = Empresa.objects.get(nit=empresa_nit)
+    periodos = _ultimos_periodos(empresa, n=n)  # [(id, anio), ...]
+    periodo_ids = [p[0] for p in periodos]
+    anios = [p[1] for p in periodos]
+
+    # Obtén definiciones de ratios disponibles
+    defs = {r.clave: r.nombre for r in RatioDef.objects.filter(clave__in=claves)}
+
+    # Trae resultados en bloque
+    resultados = (
+        ResultadoRatio.objects
+        .filter(empresa=empresa, periodo_id__in=periodo_ids, ratio__clave__in=claves)
+        .select_related("periodo", "ratio")
+        .order_by("ratio__clave", "periodo__anio")
+    )
+
+    # Estructura: {clave: {"nombre":..., "valores":[None/num por anio en orden]}, ...}
+    series = {c: {"nombre": defs.get(c, c), "valores": [None]*len(periodo_ids)} for c in claves}
+    idx_por_anio = {anio: i for i, anio in enumerate(anios)}
+
+    for r in resultados:
+        clave = r.ratio.clave
+        anio = r.periodo.anio
+        i = idx_por_anio.get(anio)
+        if i is not None:
+            # r.valor puede ser Decimal o None
+            series[clave]["valores"][i] = float(r.valor) if r.valor is not None else None
+
+    data = {
+        "empresa": {"nit": empresa.nit, "razon": empresa.razon_social},
+        "anios": anios,
+        "series": series,  # dict
+    }
+    return JsonResponse(data)
+
+def ratios_graficas(request):
+    """
+    Página con 5 gráficas de ratios usando Chart.js.
+    Espera ?empresa=<NIT> (opcionalmente &claves=...&n=3)
+    """
+    empresa_nit = request.GET.get("empresa")
+    claves = request.GET.get("claves", "LIQ_CORR,PRUEBA_ACIDA,ENDEUDAMIENTO,MARGEN_NETO,ROA")
+    n = request.GET.get("n", "3")
+
+    ctx = {
+        "empresa_nit": empresa_nit,
+        "claves": claves,
+        "n": n,
+    }
+    return render(request, "informes/ratios_graficas.html", ctx)

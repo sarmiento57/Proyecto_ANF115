@@ -1,0 +1,33 @@
+{% extends "stela/base.html" %}
+{% block content %}
+<h3>Benchmark por CIIU — {{ empresa.razon_social }} ({{ ciiu.codigo_ciiu }} {{ ciiu.descripcion }}) — {{ periodo.anio }}</h3>
+<table class="table table-sm">
+  <thead><tr>
+    <th>Clave</th><th>Nombre</th>
+    <th class="text-end">Empresa</th>
+    <th class="text-end">Promedio Sector</th>
+    <th class="text-end">Desv.Est.</th>
+    <th>Semáforo</th>
+  </tr></thead>
+  <tbody>
+    {% for f in filas %}
+    <tr>
+      <td>{{ f.clave }}</td>
+      <td>{{ f.nombre }}</td>
+      <td class="text-end">{% if f.valor is not None %}{{ f.valor|floatformat:2 }}{% else %}NA{% endif %}</td>
+      <td class="text-end">{{ f.promedio|floatformat:2 }}</td>
+      <td class="text-end">{{ f.desv|floatformat:2 }}</td>
+      <td>
+        <span class="badge 
+          {% if f.semaforo == 'ALTO' %}bg-danger
+          {% elif f.semaforo == 'BAJO' %}bg-warning
+          {% elif f.semaforo == 'OK' %}bg-success
+          {% else %}bg-secondary{% endif %}">
+          {{ f.semaforo }}
+        </span>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

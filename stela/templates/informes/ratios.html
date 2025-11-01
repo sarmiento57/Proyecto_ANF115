@@ -1,0 +1,22 @@
+{% extends "stela/base.html" %}
+{% block content %}
+<h3>Ratios — {{ empresa.razon_social }} ({{ periodo.anio }})</h3>
+<a class="btn btn-outline-primary mb-3"
+   href="{% url 'ratios_graficas' %}?empresa={{ empresa.nit }}">
+   Ver gráficas (5 ratios / 3 años)
+</a>
+<table class="table table-sm">
+  <thead><tr><th>Clave</th><th>Nombre</th><th class="text-end">Valor</th></tr></thead>
+  <tbody>
+    {% for r in resultados %}
+    <tr>
+      <td>{{ r.clave }}</td>
+      <td>{{ r.nombre }}</td>
+      <td class="text-end">
+        {% if r.valor is not None %}{{ r.valor|floatformat:2 }}{% else %}NA{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

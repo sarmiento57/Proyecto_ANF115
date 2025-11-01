@@ -1,0 +1,86 @@
+{% extends "stela/base.html" %}
+{% block content %}
+<h3>Gráficas de Ratios — Empresa {{ empresa_nit }}</h3>
+
+<div class="mb-3">
+  <form method="get" class="row g-2">
+    <input type="hidden" name="empresa" value="{{ empresa_nit }}">
+    <div class="col-md-8">
+      <label class="form-label">Claves de ratios (separadas por coma):</label>
+      <input name="claves" class="form-control" value="{{ claves }}">
+      <small class="text-muted">Ejemplo: LIQ_CORR,PRUEBA_ACIDA,ENDEUDAMIENTO,MARGEN_NETO,ROA</small>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Años a graficar</label>
+      <input name="n" class="form-control" value="{{ n }}">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button class="btn btn-primary w-100">Actualizar</button>
+    </div>
+  </form>
+</div>
+
+<div id="charts" class="row row-cols-1 row-cols-md-2 g-3"></div>
+
+<!-- CDN Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(async function () {
+  const params = new URLSearchParams({
+    empresa: "{{ empresa_nit }}",
+    claves: "{{ claves }}",
+    n: "{{ n }}",
+  });
+  const url = "{% url 'ratios_series_json' %}?" + params.toString();
+  const res = await fetch(url);
+  const data = await res.json();
+
+  const anios = data.anios;
+  const series = data.series; // dict: clave -> {nombre, valores}
+  const container = document.getElementById("charts");
+  container.innerHTML = "";
+
+  // Para cada serie creamos un canvas y dibujamos un line chart
+  Object.entries(series).forEach(([clave, info]) => {
+    const col = document.createElement("div");
+    col.className = "col";
+    const card = document.createElement("div");
+    card.className = "card shadow-sm";
+    const body = document.createElement("div");
+    body.className = "card-body";
+
+    const title = document.createElement("h6");
+    title.textContent = `${info.nombre} (${clave})`;
+    body.appendChild(title);
+
+    const canvas = document.createElement("canvas");
+    body.appendChild(canvas);
+    card.appendChild(body);
+    col.appendChild(card);
+    container.appendChild(col);
+
+    // Gráfica
+    new Chart(canvas.getContext("2d"), {
+      type: "line",
+      data: {
+        labels: anios,
+        datasets: [{
+          label: info.nombre,
+          data: info.valores,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          y: { beginAtZero: false }
+        }
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}
