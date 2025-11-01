@@ -21,3 +21,6 @@ def dashboard(request):
 
 def crearEmpresa(request):
     return render(request, "stela/base.html")
+
+def tools(request):
+    return render(request,'tools/tools.html')
