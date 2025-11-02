@@ -67,5 +67,29 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 
+document.addEventListener('DOMContentLoaded', function() {
+    const tableBody = document.querySelector('#catalog-table tbody');
+    const catalogActions = document.getElementById('catalog-actions');
+    const parentCard = catalogActions ? catalogActions.closest('.card') : null;
+
+    // Ensure all elements exist before proceeding
+    if (!tableBody || !catalogActions || !parentCard) {
+        console.error("Missing required elements: #catalog-table tbody, #catalog-actions, or parent .card");
+        return;
+    }
+
+    // Determine if the table body has no child rows
+    const isTableEmpty = tableBody.children.length === 0;
+
+    if (isTableEmpty) {
+        // Apply classes for the centered state
+        catalogActions.classList.add('is-centered');
+        parentCard.classList.add('is-empty-catalog');
+    } else {
+        // Ensure classes are removed if content is present
+        catalogActions.classList.remove('is-centered');
+        parentCard.classList.remove('is-empty-catalog');
+    }
+});
 
 

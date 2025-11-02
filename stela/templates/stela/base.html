@@ -34,7 +34,7 @@
     </div>
 
     <nav class="nav flex-column mb-3">
-      <a class="nav-link text-nord6 d-flex flex-column align-items-center mb-3" href="#">
+      <a class="nav-link text-nord6 d-flex flex-column align-items-center mb-3" href="{% url 'dashboard'%}">
           <i data-lucide="layout-dashboard" style="width:36px; height:36px;" class="mb-1" ></i>
           <span>Dashboard</span>
       </a>
@@ -86,10 +86,24 @@
             </div>
         </div>
 
+        <div class="mt-auto">
         <div class="profile-section">
-            <button class="btn btn-light w-100 text-start" id="btn-profile">
-                <i data-lucide="user" class="me-2"></i> Nombre
-            </button>
+            <div class="profile-menu-container position-relative"> <button class="btn btn-light w-100 text-start" id="btn-profile">
+                    <i data-lucide="user" class="me-2"></i> Nombre
+                </button>
+
+                <div id="profile-popup" class="profile-popup-content p-2 rounded shadow-lg d-none">
+                    <ul class="list-unstyled small mb-0">
+                        <li class="py-1 px-1">
+                            <a href="#" class="profile-link text-decoration-none d-block">Perfil</a>
+                        </li>
+                        <li class="py-1 px-1">
+                            <a href="#" class="profile-link text-decoration-none d-block text-danger">Cerrar Sesión</a>
+                        </li>
+                    </ul>
+                </div>
+                </div>
+        </div>
         </div>
     </div>
 </aside>

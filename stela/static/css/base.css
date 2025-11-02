@@ -123,3 +123,29 @@ main{margin-left:180px}
     opacity: 1;
     background-color: rgba(255, 255, 255, 0.1);
 }
+
+/* Style for the profile pop-up menu */
+.profile-popup-content {
+    /* Absolute positioning relative to the 'profile-menu-container' */
+    position: absolute;
+    top: 0; /* Align to the bottom of the container */
+    left: 100%; /* Position it to the right of the container */
+    transform: translateY(-50%); /* Adjust to center vertically next to the button */
+
+    /* Basic styling */
+    width: 150px; /* Adjust as needed */
+    z-index: 1000;
+    background-color: var(--nord6); /* Use nord6 for a light background, or white */
+    border: 1px solid var(--nord4);
+}
+
+/* Ensure links inside the popup look good */
+.profile-popup-content .profile-link {
+    color: var(--nord0); /* Nord0 for text color */
+    padding: 2px 5px;
+}
+
+.profile-popup-content .profile-link:hover {
+    background-color: var(--nord4);
+    border-radius: 3px;
+}
