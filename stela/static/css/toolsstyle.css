@@ -6,7 +6,7 @@
 :root{
   /* Fondo general */
   --bg-0: #1d2632;    /* fondo lejano */
-  --bg-1: #222e3e;    /* fondo principal */
+  --bg-1: #2e3440;    /* fondo principal */
   /* Superficies / tarjetas */
   --surf-1:#2a394e;   /* panel / card */
   --surf-2:#32445d;   /* hover/selected */
@@ -127,6 +127,7 @@ body{
 .table tbody td{
   padding:12px 14px;
   color:var(--txt);
+  background:#2b3a50;
   border-bottom:1px solid rgba(255,255,255,.035);
 }
 .table.zebra tbody tr:nth-child(even){ background: rgba(143,180,255,.045); }

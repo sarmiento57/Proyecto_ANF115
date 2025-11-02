@@ -1,5 +1,5 @@
 {% if messages %}
-  <div id="errorBox" class="error-box">
+  <div id="errorBox" class="error-box {% if messages.0.tags %}{{ messages.0.tags }}{% endif %}">
     {% for message in messages %}
       <div class="alert alert-{{ message.tags }}" role="alert">
         <p>{{ message }}</p>
@@ -13,7 +13,7 @@
     ></button>
   </div>
 {% elif form.errors %}
-  <div id="errorBox" class="error-box">
+  <div id="errorBox" class="error-box error">
     <div class="alert alert-danger" role="alert">
       <p>Usuario o contraseña incorrectos. Inténtalo de nuevo.</p>
     </div>
@@ -30,7 +30,17 @@
   function hideError() {
     const box = document.getElementById("errorBox");
     if (box) {
-      box.style.display = "none";
+      box.style.animation = "fadeOut 0.5s forwards";
+      setTimeout(() => {
+        box.style.display = "none";
+      }, 500);
     }
   }
+
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const box = document.getElementById("errorBox");
+    if (box) {
+      setTimeout(hideError, 15000);
+    }
+  });
 </script>

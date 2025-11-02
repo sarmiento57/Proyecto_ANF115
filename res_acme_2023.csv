@@ -1,0 +1,4 @@
+codigo,nombre,grupo,naturaleza,debe,haber
+4101,Ventas netas,Ingresos,I,0,1000000
+5101,Costo de ventas,Costos,G,700000,0
+5901,Utilidad Neta,Resultados,I,0,120000
