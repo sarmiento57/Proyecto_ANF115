@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import Ciuu, Empresa, Venta
+from .models import Ciiu, Empresa, Venta
 
 # Catálogo
 from stela.models.catalogo import Catalogo, GrupoCuenta, Cuenta
 # Register your models here.
-admin.site.register(Ciuu)
+admin.site.register(Ciiu)
 admin.site.register(Empresa)
 admin.site.register(Venta)
 

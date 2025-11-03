@@ -1,13 +1,11 @@
+{% extends '../stela/base.html' %}
 {% load static %}
 {% load dict_extras %}
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Herramientas financieras</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  {# Si ya tienes Bootstrap en tu base, puedes quitar esta línea #}
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+{% block title %}Herramientas financieras{% endblock title %}
+
+{% block extra_head %}
+  {# Estilos específicos para esta página #}
   <style>
     .table-sm td, .table-sm th { padding: .35rem .5rem; }
     .badge-dot { width:.6rem; height:.6rem; display:inline-block; border-radius:50%; margin-right:.3rem; }
@@ -15,9 +13,10 @@
     .dot-down { background:#dc3545; }  /* rojo  */
     .dot-flat { background:#6c757d; }  /* gris  */
   </style>
-</head>
-<body class="bg-light">
+{% endblock extra_head %}
 
+
+{% block content %}
 <div class="container py-4">
   {% include 'partials/messages.html' %}
 
@@ -193,8 +192,4 @@
   </div>
 
 </div>
-
-{# Si ya usas Bootstrap en base, puedes quitar esto #}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock content %}

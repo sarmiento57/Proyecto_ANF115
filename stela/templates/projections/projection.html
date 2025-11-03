@@ -1,137 +1,136 @@
+{% extends '../stela/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Proyecciones</title>
+{% load django_bootstrap5 %}
 
-    {% load django_bootstrap5 %} {% bootstrap_css %}
-    <link rel="stylesheet" href="{% static 'css/projection.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/error-box.css' %}">
-  </head>
-  <body>
-    {% block content %}
-      <!-- mostrar mensaje de error -->
-       {% include 'partials/messages.html' %}
+{% block title %}Proyecciones{% endblock title %}
 
-       <h1>Proyección de ventas</h1>
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/projection.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/error-box.css' %}">
+{% endblock extra_head %}
 
-      <div class="contenedor">
-        <div class="formulario">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <!-- seleccionar empresa -->
-             <label>Seleccionar empresa:</label>
-             <select name="empresa" id="empresa-select" required>
-                <option value="" disabled selected>-- Seleccione una empresa --</option>
-                {% for e in empresas %}
-                    <option value="{{ e.nit }}" {% if empresa_seleccionada and e.nit == empresa_seleccionada.nit %}selected{% endif %}>
-                        {{ e.razon_social }}
-                    </option>
-                {% endfor %}
-            </select>
-            <br /><br />
-            <!-- cargar archivo excel -->
-            <label>Cargar archivo de excel (Columnas: Mes valor):</label><br>
-            <input type="file" name="archivo_excel" accept=".xlsx, .xls" required />
-            <button type="submit">Cargar</button>
+{% block content %}
+<!-- mostrar mensaje de error -->
+{% include 'partials/messages.html' %}
 
-          </form>
+<h1>Proyección de ventas</h1>
 
-          <!-- tablas -->
+<div class="contenedor">
+  <div class="formulario">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <!-- seleccionar empresa -->
+      <label>Seleccionar empresa:</label>
+      <select name="empresa" id="empresa-select" required>
+        <option value="" disabled selected>-- Seleccione una empresa --</option>
+        {% for e in empresas %}
+        <option value="{{ e.nit }}" {% if empresa_seleccionada and e.nit == empresa_seleccionada.nit %}selected{% endif %}>
+          {{ e.razon_social }}
+        </option>
+        {% endfor %}
+      </select>
+      <br /><br />
+      <!-- cargar archivo excel -->
+      <label>Cargar archivo de excel (Columnas: Mes valor):</label><br>
+      <input type="file" name="archivo_excel" accept=".xlsx, .xls" required />
+      <button type="submit">Cargar</button>
 
-            <br /><br />
+    </form>
 
-            <h2>Ventas guardadas</h2>
-            <!-- mensaje si hay ventas o no y poner la empresa que selecciono por si el ujsuario tiene mas de 1 empresa-->
-            {% if ventas %}
-                <p>Proyección de ventas para la empresa: {{ empresa_seleccionada.razon_social }}</p>
-            {% else %}
-                <p>No hay proyecciones de ventas para la empresa: {{ empresa_seleccionada.razon_social }}</p>
-            {% endif %}
-           
-           <table border="1">
-               <tr>
-                   <th>#</th>
-                   <th>Mes</th>
-                   <th>Valor</th>
-               </tr>
-               {% for v in ventas %}
-               <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ v.mes_venta|date:"F Y" }}</td>
-                    <td>{{ v.saldo_venta|floatformat:2 }}</td>
-                </tr>
-               {% endfor %}
-           </table>
-           <br /><br />
-           
-           <!-- Tabla de minimos cuadrados -->
-            <h2>Proyección mínimos Cuadrados</h2>
-            <table border="1">
-                <tr>
-                    <th>#</th>
-                    <th>Mes</th>
-                    <th>Valor Proyectado</th>
-                </tr>
+    <!-- tablas -->
 
-                {% for p in proyecciones %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ p.mes_proyectado|date:"F Y" }}</td>
-                    <td>{{ p.valor_proyectado|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
-            </table>
+    <br /><br />
 
-            <br /><br />
-            <!-- tabla de proyeccion porcentual-->
-            <h2>Proyección Porcentual</h2>
-            <table border="1">
-                <tr>
-                    <th>#</th>
-                    <th>Mes</th>
-                    <th>Valor Proyectado</th>
-                </tr>
+    <h2>Ventas guardadas</h2>
+    <!-- mensaje si hay ventas o no y poner la empresa que selecciono por si el ujsuario tiene mas de 1 empresa-->
+    {% if ventas %}
+    <p>Proyección de ventas para la empresa: {{ empresa_seleccionada.razon_social }}</p>
+    {% else %}
+    <p>No hay proyecciones de ventas para la empresa: {{ empresa_seleccionada.razon_social }}</p>
+    {% endif %}
 
-                {% for p in proyecciones_porcentuales %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ p.mes_proyectado|date:"F Y" }}</td>
-                    <td>{{ p.valor_proyectado|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
-            </table>
+    <table border="1">
+      <tr>
+        <th>#</th>
+        <th>Mes</th>
+        <th>Valor</th>
+      </tr>
+      {% for v in ventas %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ v.mes_venta|date:"F Y" }}</td>
+        <td>{{ v.saldo_venta|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <br /><br />
 
-            <br /><br />
-            <!-- tabla de incremento absoluto-->
-            <h2>Proyección Incremento Absoluto</h2>
-            <table border="1">
-                <tr></tr>
-                    <th>#</th>
-                    <th>Mes</th>
-                    <th>Valor Proyectado</th>
-                </tr>
+    <!-- Tabla de minimos cuadrados -->
+    <h2>Proyección mínimos Cuadrados</h2>
+    <table border="1">
+      <tr>
+        <th>#</th>
+        <th>Mes</th>
+        <th>Valor Proyectado</th>
+      </tr>
 
-                {% for p in proyecciones_incremento_absoluto %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ p.mes_proyectado|date:"F Y" }}</td>
-                    <td>{{ p.valor_proyectado|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-    </div>
-    {% endblock %} {% bootstrap_javascript %}
-  </body>
-    <script>
-    document.getElementById('empresa-select').addEventListener('change', function() {
+      {% for p in proyecciones %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ p.mes_proyectado|date:"F Y" }}</td>
+        <td>{{ p.valor_proyectado|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <br /><br />
+    <!-- tabla de proyeccion porcentual-->
+    <h2>Proyección Porcentual</h2>
+    <table border="1">
+      <tr>
+        <th>#</th>
+        <th>Mes</th>
+        <th>Valor Proyectado</th>
+      </tr>
+
+      {% for p in proyecciones_porcentuales %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ p.mes_proyectado|date:"F Y" }}</td>
+        <td>{{ p.valor_proyectado|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <br /><br />
+    <!-- tabla de incremento absoluto-->
+    <h2>Proyección Incremento Absoluto</h2>
+    <table border="1">
+      <tr></tr>
+      <th>#</th>
+      <th>Mes</th>
+      <th>Valor Proyectado</th>
+      </tr>
+
+      {% for p in proyecciones_incremento_absoluto %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ p.mes_proyectado|date:"F Y" }}</td>
+        <td>{{ p.valor_proyectado|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('empresa-select').addEventListener('change', function () {
     const empresa = this.value;
-        if (empresa) {
-            window.location.href = `/stela/projections/?empresa=${empresa}`;
-        }   
-    });
-    </script>
-</html>
+    if (empresa) {
+      window.location.href = `/stela/projections/?empresa=${empresa}`;
+    }
+  });
+</script>
+{% endblock extra_js %}
