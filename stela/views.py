@@ -159,7 +159,7 @@ def projections(request):
             # verygud
             messages.success(
                 request,
-                f"Ventas cargadas o guardadas correctamente para la empresa {empresa_seleccionada.razon_social}.",
+                f"Ventas guardadas correctamente para la empresa {empresa_seleccionada.razon_social}.",
             )
 
         except Exception as e:
@@ -253,3 +253,10 @@ def projections(request):
         "proyecciones_incremento_absoluto": proyecciones_incremento_absoluto,
     }
     return render(request, "projections/projection.html", contexto)
+
+#filtro para las proyecciones
+def money(value):
+    try:
+        return "${:,.2f}".format(float(value))
+    except (ValueError, TypeError):
+        return "$0.00"
