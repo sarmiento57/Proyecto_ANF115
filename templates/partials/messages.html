@@ -1,46 +1,31 @@
 {% if messages %}
-  <div id="errorBox" class="error-box {% if messages.0.tags %}{{ messages.0.tags }}{% endif %}">
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }}" role="alert">
-        <p>{{ message }}</p>
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} floating-alert" role="alert">
+      <p>{{ message }}</p>
+      <div class="alert-close-wrapper">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
       </div>
-    {% endfor %}
-    <button
-      type="button"
-      class="btn-close"
-      onclick="hideError()"
-      aria-label="Close"
-    ></button>
-  </div>
-{% elif form.errors %}
-  <div id="errorBox" class="error-box error">
-    <div class="alert alert-danger" role="alert">
-      <p>Usuario o contraseña incorrectos. Inténtalo de nuevo.</p>
     </div>
-    <button
-      type="button"
-      class="btn-close"
-      onclick="hideError()"
-      aria-label="Close"
-    ></button>
+  {% endfor %}
+{% elif form.errors %}
+  <div class="alert alert-danger floating-alert" role="alert">
+    <p>Usuario o contraseña incorrectos. Inténtalo de nuevo.</p>
+    <div class="alert-close-wrapper">
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
   </div>
 {% endif %}
 
 <script>
-  function hideError() {
-    const box = document.getElementById("errorBox");
-    if (box) {
-      box.style.animation = "fadeOut 0.5s forwards";
+  window.addEventListener('DOMContentLoaded', () => {
+    const alerts = document.querySelectorAll('.floating-alert');
+    alerts.forEach(alert => {
       setTimeout(() => {
-        box.style.display = "none";
-      }, 500);
-    }
-  }
-
-  window.addEventListener('DOMContentLoaded', (event) => {
-    const box = document.getElementById("errorBox");
-    if (box) {
-      setTimeout(hideError, 15000);
-    }
+        alert.style.animation = 'fadeOut 0.5s forwards';
+        setTimeout(() => {
+          alert.remove();
+        }, 500);
+      }, 10000);
+    });
   });
 </script>

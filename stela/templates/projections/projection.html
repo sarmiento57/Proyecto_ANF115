@@ -1,137 +1,173 @@
+{% extends '../stela/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Proyecciones</title>
+{% load format_extras %}
+{% block title %}Stela — Proyecciones{% endblock %}
 
-    {% load django_bootstrap5 %} {% bootstrap_css %}
-    <link rel="stylesheet" href="{% static 'css/projection.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/error-box.css' %}">
-  </head>
-  <body>
-    {% block content %}
-      <!-- mostrar mensaje de error -->
-       {% include 'partials/messages.html' %}
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/projection.css' %}">
+  <link rel="stylesheet" href="{% static 'css/error-box.css' %}">
+{% endblock %}
 
-       <h1>Proyección de ventas</h1>
+{% block content %}
+<div class="container-fluid">
+  {% include 'partials/messages.html' %}
 
-      <div class="contenedor">
-        <div class="formulario">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <!-- seleccionar empresa -->
-             <label>Seleccionar empresa:</label>
-             <select name="empresa" id="empresa-select" required>
-                <option value="" disabled selected>-- Seleccione una empresa --</option>
-                {% for e in empresas %}
-                    <option value="{{ e.nit }}" {% if empresa_seleccionada and e.nit == empresa_seleccionada.nit %}selected{% endif %}>
-                        {{ e.razon_social }}
-                    </option>
-                {% endfor %}
-            </select>
-            <br /><br />
-            <!-- cargar archivo excel -->
-            <label>Cargar archivo de excel (Columnas: Mes valor):</label><br>
-            <input type="file" name="archivo_excel" accept=".xlsx, .xls" required />
-            <button type="submit">Cargar</button>
+  <!-- Formulario de carga -->
+  <div class="card mb-4">
+    <h6 class="mb-3">Cargar proyecciones</h6>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Seleccionar empresa:</label>
+        <select name="empresa" id="empresa-select" class="form-select" required>
+          <option value="" disabled selected>-- Seleccione una empresa --</option>
+          {% for e in empresas %}
+            <option value="{{ e.nit }}" {% if empresa_seleccionada and e.nit == empresa_seleccionada.nit %}selected{% endif %}>
+              {{ e.razon_social }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
 
-          </form>
+      <div class="mb-3">
+        <label class="form-label">Archivo Excel (Columnas: Mes, Valor):</label>
+        <input type="file" name="archivo_excel" class="form-control" accept=".xlsx, .xls" required />
+      </div>
 
-          <!-- tablas -->
+      <button type="submit" class="btn btn-primary">Cargar</button>
+    </form>
+  </div>
 
-            <br /><br />
-
-            <h2>Ventas guardadas</h2>
-            <!-- mensaje si hay ventas o no y poner la empresa que selecciono por si el ujsuario tiene mas de 1 empresa-->
-            {% if ventas %}
-                <p>Proyección de ventas para la empresa: {{ empresa_seleccionada.razon_social }}</p>
-            {% else %}
-                <p>No hay proyecciones de ventas para la empresa: {{ empresa_seleccionada.razon_social }}</p>
-            {% endif %}
-           
-           <table border="1">
-               <tr>
-                   <th>#</th>
-                   <th>Mes</th>
-                   <th>Valor</th>
-               </tr>
-               {% for v in ventas %}
-               <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ v.mes_venta|date:"F Y" }}</td>
-                    <td>{{ v.saldo_venta|floatformat:2 }}</td>
-                </tr>
-               {% endfor %}
-           </table>
-           <br /><br />
-           
-           <!-- Tabla de minimos cuadrados -->
-            <h2>Proyección mínimos Cuadrados</h2>
-            <table border="1">
-                <tr>
-                    <th>#</th>
-                    <th>Mes</th>
-                    <th>Valor Proyectado</th>
-                </tr>
-
-                {% for p in proyecciones %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ p.mes_proyectado|date:"F Y" }}</td>
-                    <td>{{ p.valor_proyectado|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-
-            <br /><br />
-            <!-- tabla de proyeccion porcentual-->
-            <h2>Proyección Porcentual</h2>
-            <table border="1">
-                <tr>
-                    <th>#</th>
-                    <th>Mes</th>
-                    <th>Valor Proyectado</th>
-                </tr>
-
-                {% for p in proyecciones_porcentuales %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ p.mes_proyectado|date:"F Y" }}</td>
-                    <td>{{ p.valor_proyectado|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-
-            <br /><br />
-            <!-- tabla de incremento absoluto-->
-            <h2>Proyección Incremento Absoluto</h2>
-            <table border="1">
-                <tr></tr>
-                    <th>#</th>
-                    <th>Mes</th>
-                    <th>Valor Proyectado</th>
-                </tr>
-
-                {% for p in proyecciones_incremento_absoluto %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ p.mes_proyectado|date:"F Y" }}</td>
-                    <td>{{ p.valor_proyectado|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
+  <!-- Ventas guardadas -->
+  <div class="card mb-4">
+    <h6 class="mb-3">Ventas guardadas</h6>
+    {% if ventas %}
+      <p>Proyección de ventas para la empresa: <strong>{{ empresa_seleccionada.razon_social }}</strong></p>
+    {% else %}
+      <p>No hay proyecciones de ventas para la empresa: <strong>{{ empresa_seleccionada.razon_social }}</strong></p>
+    {% endif %}
+    <div class="table-responsive">
+      <table class="table table-striped table-sm">
+        <thead class="table-light">
+          <tr><th>#</th><th>Mes</th><th>Valor</th></tr>
+        </thead>
+        <tbody>
+          {% for v in ventas %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ v.mes_venta|date:"F Y" }}</td>
+              <td>{{ v.saldo_venta|money }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    {% endblock %} {% bootstrap_javascript %}
-  </body>
-    <script>
-    document.getElementById('empresa-select').addEventListener('change', function() {
-    const empresa = this.value;
-        if (empresa) {
-            window.location.href = `/stela/projections/?empresa=${empresa}`;
-        }   
-    });
-    </script>
-</html>
+  </div>
+
+  <!-- Gráficos -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+        <div class="card p-3">
+            <h6 class="mb-3">Proyección Mínimos Cuadrados</h6>
+            <canvas id="chartMinimos" height="200"></canvas>
+        </div>
+        </div>
+        <div class="col-md-4 mb-3">
+        <div class="card p-3">
+            <h6 class="mb-3">Proyección Porcentual</h6>
+            <canvas id="chartPorcentual" height="200"></canvas>
+        </div>
+        </div>
+        <div class="col-md-4 mb-3">
+        <div class="card p-3">
+            <h6 class="mb-3">Proyección Incremento Absoluto</h6>
+            <canvas id="chartAbsoluto" height="200"></canvas>
+        </div>
+        </div>
+
+  <!-- Proyección mínimos cuadrados -->
+  <div class="card mb-4">
+    <h6 class="mb-3">Proyección Mínimos Cuadrados</h6>
+    <div class="table-responsive">
+      <table class="table table-striped table-sm">
+        <thead class="table-light">
+          <tr><th>#</th><th>Mes</th><th>Valor Proyectado</th></tr>
+        </thead>
+        <tbody>
+          {% for p in proyecciones %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ p.mes_proyectado|date:"F Y" }}</td>
+              <td>{{ p.valor_proyectado|money }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Proyección porcentual -->
+  <div class="card mb-4">
+    <h6 class="mb-3">Proyección Porcentual</h6>
+    <div class="table-responsive">
+      <table class="table table-striped table-sm">
+        <thead class="table-light">
+          <tr><th>#</th><th>Mes</th><th>Valor Proyectado</th></tr>
+        </thead>
+        <tbody>
+          {% for p in proyecciones_porcentuales %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ p.mes_proyectado|date:"F Y" }}</td>
+              <td>{{ p.valor_proyectado|money }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Proyección incremento absoluto -->
+  <div class="card mb-4">
+    <h6 class="mb-3">Proyección Incremento Absoluto</h6>
+    <div class="table-responsive">
+      <table class="table table-striped table-sm">
+        <thead class="table-light">
+          <tr><th>#</th><th>Mes</th><th>Valor Proyectado</th></tr>
+        </thead>
+        <tbody>
+          {% for p in proyecciones_incremento_absoluto %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ p.mes_proyectado|date:"F Y" }}</td>
+              <td>{{ p.valor_proyectado|money }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Datos dinámicos para las gráficas -->
+  {% if proyecciones %}
+    {{ proyecciones|json_script:"dataMinimos" }}
+  {% endif %}
+  {% if proyecciones_porcentuales %}
+    {{ proyecciones_porcentuales|json_script:"dataPorcentual" }}
+  {% endif %}
+  {% if proyecciones_incremento_absoluto %}
+    {{ proyecciones_incremento_absoluto|json_script:"dataAbsoluto" }}
+  {% endif %}
+
+  <script src="{% static 'js/projection.js' %}"></script>
+{% endblock %}
+
+
+
+

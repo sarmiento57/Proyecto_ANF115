@@ -1,6 +1,6 @@
 #Clase Empresa
 from django.db import models
-from .ciiu import Ciuu
+from .ciiu import Ciiu
 # importar la de customuser para relacionar empresa con usuario
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -11,7 +11,7 @@ class Empresa(models.Model):
 
     #Clasificacion CIIU Rev 4
     idCiiu= models.ForeignKey(
-        Ciuu, 
+        Ciiu, 
         on_delete=models.CASCADE
     )
     usuario = models.ForeignKey(
