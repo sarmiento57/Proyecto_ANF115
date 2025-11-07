@@ -1,0 +1,78 @@
+{% extends 'stela/base.html' %}
+{% load static %}
+{% block title %}Stela — Eliminar Código CIIU{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  {% include 'partials/messages.html' %}
+
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-danger text-white">
+          <h4 class="mb-0">Eliminar Código CIIU</h4>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning">
+            <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+          </div>
+
+          <p>¿Está seguro de que desea eliminar el siguiente código CIIU?</p>
+
+          <div class="card bg-light mb-3">
+            <div class="card-body">
+              <p class="mb-1"><strong>Código:</strong> {{ ciiu.codigo }}</p>
+              <p class="mb-1"><strong>Descripción:</strong> {{ ciiu.descripcion }}</p>
+              <p class="mb-1"><strong>Nivel:</strong> {{ ciiu.nivel }}</p>
+              {% if ciiu.padre %}
+                <p class="mb-0"><strong>Padre:</strong> {{ ciiu.padre.codigo }} - {{ ciiu.padre.descripcion }}</p>
+              {% else %}
+                <p class="mb-0"><strong>Padre:</strong> <span class="text-muted">Sin padre (raíz)</span></p>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if empresas_count > 0 %}
+            <div class="alert alert-danger">
+              <strong>No se puede eliminar:</strong> Este código CIIU está siendo usado por 
+              <strong>{{ empresas_count }}</strong> empresa(s). 
+              Primero debe cambiar el código CIIU de estas empresas.
+            </div>
+          {% endif %}
+
+          {% if hijos_count > 0 %}
+            <div class="alert alert-danger">
+              <strong>No se puede eliminar:</strong> Este código CIIU tiene 
+              <strong>{{ hijos_count }}</strong> código(s) hijo(s). 
+              Primero debe eliminar o reasignar los códigos hijos.
+            </div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="d-flex gap-2 justify-content-end">
+              <a href="{% url 'ciiu_list' %}" class="btn btn-secondary">
+                Cancelar
+              </a>
+              {% if empresas_count == 0 and hijos_count == 0 %}
+                <button type="submit" class="btn btn-danger">
+                  <i data-lucide="trash-2" class="me-2"></i>Eliminar
+                </button>
+              {% else %}
+                <button type="button" class="btn btn-danger" disabled>
+                  <i data-lucide="trash-2" class="me-2"></i>No se puede eliminar
+                </button>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+</script>
+{% endblock %}
+
