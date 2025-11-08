@@ -17,6 +17,9 @@ from stela.models.finanzas import Periodo
 from stela.services.analisis import analisis_vertical, analisis_horizontal
 from stela.services.ratios import calcular_y_guardar_ratios
 from stela.services.benchmark import benchmarking_por_ciiu, etiqueta_semaforo
+from stela.models.ciiu import Ciiu
+from stela.forms import CiiuForm
+from django.core.paginator import Paginator
 
 from .forms.EmpresaForm import EmpresaForm,EmpresaEditForm
 
@@ -205,7 +208,7 @@ def projections(request):
             # verygud
             messages.success(
                 request,
-                f"Ventas cargadas o guardadas correctamente para la empresa {empresa_seleccionada.razon_social}.",
+                f"Ventas guardadas correctamente para la empresa {empresa_seleccionada.razon_social}.",
             )
 
         except Exception as e:
@@ -299,3 +302,138 @@ def projections(request):
         "proyecciones_incremento_absoluto": proyecciones_incremento_absoluto,
     }
     return render(request, "projections/projection.html", contexto)
+
+#filtro para las proyecciones
+def money(value):
+    try:
+        return "${:,.2f}".format(float(value))
+    except (ValueError, TypeError):
+        return "$0.00"
+
+
+# ========== VISTAS CRUD PARA CIIU (CATÁLOGOS) ==========
+
+@access_required('011')
+def ciiu_list(request):
+    """
+    Lista todos los códigos CIIU con paginación y búsqueda.
+    """
+    query = request.GET.get('q', '').strip()
+    ciiu_list = Ciiu.objects.all().order_by('codigo')
+    
+    # Búsqueda por código o descripción
+    if query:
+        ciiu_list = ciiu_list.filter(
+            codigo__icontains=query
+        ) | ciiu_list.filter(
+            descripcion__icontains=query
+        )
+    
+    # Paginación
+    paginator = Paginator(ciiu_list, 25)  # 25 por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Contar empresas asociadas para cada CIIU
+    for ciiu in page_obj:
+        ciiu.empresas_count = Empresa.objects.filter(idCiiu=ciiu).count()
+    
+    context = {
+        'page_obj': page_obj,
+        'query': query,
+    }
+    return render(request, 'stela/catalogo/list.html', context)
+
+
+@access_required('011')
+def ciiu_create(request):
+    """
+    Crea un nuevo código CIIU.
+    """
+    if request.method == 'POST':
+        form = CiiuForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Código CIIU creado correctamente.')
+            return redirect('ciiu_list')
+        else:
+            messages.error(request, 'Por favor, corrige los errores en el formulario.')
+    else:
+        form = CiiuForm()
+    
+    context = {
+        'form': form,
+        'titulo': 'Crear Código CIIU'
+    }
+    return render(request, 'stela/catalogo/create.html', context)
+
+
+@access_required('011')
+def ciiu_update(request, codigo):
+    """
+    Edita un código CIIU existente.
+    """
+    ciiu = get_object_or_404(Ciiu, codigo=codigo)
+    
+    if request.method == 'POST':
+        form = CiiuForm(request.POST, instance=ciiu)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Código CIIU actualizado correctamente.')
+            return redirect('ciiu_list')
+        else:
+            messages.error(request, 'Por favor, corrige los errores en el formulario.')
+    else:
+        form = CiiuForm(instance=ciiu)
+    
+    # Contar empresas asociadas
+    empresas_count = Empresa.objects.filter(idCiiu=ciiu).count()
+    hijos_count = ciiu.hijos.count()
+    
+    context = {
+        'form': form,
+        'ciiu': ciiu,
+        'titulo': 'Editar Código CIIU',
+        'empresas_count': empresas_count,
+        'hijos_count': hijos_count
+    }
+    return render(request, 'stela/catalogo/update.html', context)
+
+
+@access_required('011')
+def ciiu_delete(request, codigo):
+    """
+    Elimina un código CIIU (con validación de empresas e hijos).
+    """
+    ciiu = get_object_or_404(Ciiu, codigo=codigo)
+    
+    # Validar si tiene empresas asociadas
+    empresas_count = Empresa.objects.filter(idCiiu=ciiu).count()
+    hijos_count = ciiu.hijos.count()
+    
+    if request.method == 'POST':
+        # Verificar nuevamente antes de eliminar
+        if Empresa.objects.filter(idCiiu=ciiu).exists():
+            messages.error(
+                request,
+                f'No se puede eliminar el código CIIU porque tiene {empresas_count} empresa(s) asociada(s).'
+            )
+            return redirect('ciiu_list')
+        
+        if ciiu.hijos.exists():
+            messages.error(
+                request,
+                f'No se puede eliminar el código CIIU porque tiene {hijos_count} código(s) hijo(s).'
+            )
+            return redirect('ciiu_list')
+        
+        ciiu.delete()
+        messages.success(request, 'Código CIIU eliminado correctamente.')
+        return redirect('ciiu_list')
+    
+    context = {
+        'ciiu': ciiu,
+        'empresas_count': empresas_count,
+        'hijos_count': hijos_count
+    }
+    return render(request, 'stela/catalogo/delete.html', context)

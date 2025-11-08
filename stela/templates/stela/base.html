@@ -41,6 +41,10 @@
           <i data-lucide="layout-dashboard" style="width:36px; height:36px;" class="mb-1" ></i>
           <span>Dashboard</span>
       </a>
+      <a class="nav-link text-nord6 d-flex flex-column align-items-center mb-3" href="{% url 'ciiu_list'%}">
+          <i data-lucide="book-open" class="mb-1" style="width:36px; height:36px;"></i>
+          <span>Catálogos</span>
+      </a>
       <a class="nav-link text-nord6 d-flex flex-column align-items-center mb-3" href="{% url 'tools'%}">
           <i data-lucide="line-chart" class="mb-1" style="width:36px; height:36px;"></i>
           <span>Herramientas</span>
@@ -100,10 +104,10 @@
                 <div id="profile-popup" class="profile-popup-content p-2 rounded shadow-lg d-none">
                     <ul class="list-unstyled small mb-0">
                         <li class="py-1 px-1">
-                            <a href="#" class="profile-link text-decoration-none d-block">Perfil</a>
+                            <a href="{% url 'perfil_view' %}" class="profile-link text-decoration-none d-block">Perfil</a>
                         </li>
                         <li class="py-1 px-1">
-                            <a href="#" class="profile-link text-decoration-none d-block text-danger">Cerrar Sesión</a>
+                            <a href="{% url 'logout' %}" class="profile-link text-decoration-none d-block text-danger">Cerrar Sesión</a>
                         </li>
                     </ul>
                 </div>

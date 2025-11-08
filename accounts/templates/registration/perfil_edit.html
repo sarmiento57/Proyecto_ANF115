@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editar Perfil</title>
+
+    {% load django_bootstrap5 %} {% bootstrap_css %}
+    <link rel="stylesheet" href="{% static 'css/register.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/error-box.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  </head>
+  <body>
+    {% block content %}
+    <section>
+      <!-- mensaje de errores -->
+      {% include 'partials/messages.html' %}
+
+      <!-- formulario de edición -->
+      <div class="contenedor">
+        <div class="imagen">
+          <img src="{% static 'logo.svg' %}" alt="Stela logo" />
+        </div>
+        <div class="formulario">
+          <form method="post" action="{% url 'perfil_edit' %}">
+            {% csrf_token %}
+            <h2>Editar Perfil</h2>
+
+            <!-- Username (solo lectura) -->
+            <div class="input-contenedor" style="pointer-events: none; opacity: 0.6;">
+              <i class="fa-solid fa-user"></i>
+              <input
+                type="text"
+                class="form-control"
+                value="{{ user.username }}"
+                readonly
+              />
+              <label class="font-weight-bold">Nombre de usuario</label>
+              <small class="text-muted">No se puede modificar</small>
+            </div>
+
+            <!-- DUI (solo lectura) -->
+            <div class="input-contenedor" style="pointer-events: none; opacity: 0.6;">
+              <i class="fa-solid fa-id-card"></i>
+              <input
+                type="text"
+                class="form-control"
+                value="{{ user.dui|default:'No registrado' }}"
+                readonly
+              />
+              <label class="font-weight-bold">DUI</label>
+              <small class="text-muted">No se puede modificar</small>
+            </div>
+
+            <!-- Campos editables -->
+            <div class="input-contenedor">
+              <i class="fa-solid fa-user"></i>
+              {{ form.first_name }}
+              <label for="{{ form.first_name.id_for_label }}" class="font-weight-bold">Nombres</label>
+              {% if form.first_name.errors %}
+                <div class="text-danger small">{{ form.first_name.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="input-contenedor">
+              <i class="fa-solid fa-user"></i>
+              {{ form.last_name }}
+              <label for="{{ form.last_name.id_for_label }}" class="font-weight-bold">Apellidos</label>
+              {% if form.last_name.errors %}
+                <div class="text-danger small">{{ form.last_name.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="input-contenedor">
+              <i class="fa-solid fa-envelope"></i>
+              {{ form.email }}
+              <label for="{{ form.email.id_for_label }}" class="font-weight-bold">Correo electrónico</label>
+              {% if form.email.errors %}
+                <div class="text-danger small">{{ form.email.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="input-contenedor">
+              <i class="fa-solid fa-phone"></i>
+              {{ form.telephone }}
+              <label for="{{ form.telephone.id_for_label }}" class="font-weight-bold">Teléfono</label>
+              {% if form.telephone.errors %}
+                <div class="text-danger small">{{ form.telephone.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex gap-2 mt-4 mb-3 flex-wrap">
+              <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary flex-fill">
+                <i class="fa-solid fa-arrow-left me-2"></i>Volver al Dashboard
+              </a>
+              <a href="{% url 'perfil_view' %}" class="btn btn-secondary flex-fill">
+                Cancelar
+              </a>
+              <button
+                type="submit"
+                class="btn btn-primary flex-fill"
+                style="background-color: #5e81ac; border: none; color: #fff;"
+              >
+                <i class="fa-solid fa-save me-2"></i>Guardar Cambios
+              </button>
+            </div>
+
+            <div class="olvidar mt-3">
+              <a href="{% url 'landing' %}">Ir a la página de inicio</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+    {% endblock %} {% bootstrap_javascript %}
+    <script src="{% static 'js/mascara.js' %}"></script>
+  </body>
+</html>

@@ -1,0 +1,149 @@
+{% extends 'stela/base.html' %}
+{% load static %}
+{% block title %}Stela — Catálogos CIIU{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  {% include 'partials/messages.html' %}
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Catálogos CIIU</h2>
+    <a href="{% url 'ciiu_create' %}" class="btn btn-primary">
+      <i data-lucide="plus" class="me-2"></i>Crear Código CIIU
+    </a>
+  </div>
+
+  <!-- Búsqueda -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="get" action="{% url 'ciiu_list' %}" class="row g-3">
+        <div class="col-md-10">
+          <input 
+            type="text" 
+            name="q" 
+            class="form-control" 
+            placeholder="Buscar por código o descripción..." 
+            value="{{ query }}"
+          >
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">
+            <i data-lucide="search" class="me-2"></i>Buscar
+          </button>
+        </div>
+        {% if query %}
+        <div class="col-12">
+          <a href="{% url 'ciiu_list' %}" class="btn btn-sm btn-outline-secondary">
+            Limpiar búsqueda
+          </a>
+        </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla de códigos CIIU -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Nivel</th>
+              <th>Padre</th>
+              <th>Empresas</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ciiu in page_obj %}
+            <tr>
+              <td><strong>{{ ciiu.codigo }}</strong></td>
+              <td>{{ ciiu.descripcion }}</td>
+              <td>
+                <span class="badge bg-secondary">{{ ciiu.nivel }}</span>
+              </td>
+              <td>
+                {% if ciiu.padre %}
+                  <a href="{% url 'ciiu_update' ciiu.padre.codigo %}" class="text-decoration-none">
+                    {{ ciiu.padre.codigo }}
+                  </a>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if ciiu.empresas_count > 0 %}
+                  <span class="badge bg-info">{{ ciiu.empresas_count }}</span>
+                {% else %}
+                  <span class="text-muted">0</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm" role="group">
+                  <a href="{% url 'ciiu_update' ciiu.codigo %}" class="btn btn-outline-primary" title="Editar">
+                    <i data-lucide="edit-2"></i>
+                  </a>
+                  <a href="{% url 'ciiu_delete' ciiu.codigo %}" class="btn btn-outline-danger" title="Eliminar">
+                    <i data-lucide="trash-2"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">
+                {% if query %}
+                  No se encontraron códigos CIIU que coincidan con "{{ query }}"
+                {% else %}
+                  No hay códigos CIIU registrados. 
+                  <a href="{% url 'ciiu_create' %}">Crear el primero</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      {% if page_obj.has_other_pages %}
+      <nav aria-label="Paginación">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}">Primera</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Anterior</a>
+            </li>
+          {% endif %}
+
+          <li class="page-item active">
+            <span class="page-link">
+              Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+          </li>
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Siguiente</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">Última</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+</script>
+{% endblock %}
+

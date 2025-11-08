@@ -1,0 +1,98 @@
+{% extends 'stela/base.html' %}
+{% load static %}
+{% block title %}Stela — Crear Código CIIU{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  {% include 'partials/messages.html' %}
+
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="mb-0">{{ titulo }}</h4>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+              <label for="{{ form.codigo.id_for_label }}" class="form-label">
+                {{ form.codigo.label }}
+                <span class="text-danger">*</span>
+              </label>
+              {{ form.codigo }}
+              {% if form.codigo.errors %}
+                <div class="text-danger small mt-1">
+                  {{ form.codigo.errors.0 }}
+                </div>
+              {% endif %}
+              <div class="form-text">Código único del CIIU (máximo 10 caracteres)</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.descripcion.id_for_label }}" class="form-label">
+                {{ form.descripcion.label }}
+                <span class="text-danger">*</span>
+              </label>
+              {{ form.descripcion }}
+              {% if form.descripcion.errors %}
+                <div class="text-danger small mt-1">
+                  {{ form.descripcion.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.nivel.id_for_label }}" class="form-label">
+                {{ form.nivel.label }}
+                <span class="text-danger">*</span>
+              </label>
+              {{ form.nivel }}
+              {% if form.nivel.errors %}
+                <div class="text-danger small mt-1">
+                  {{ form.nivel.errors.0 }}
+                </div>
+              {% endif %}
+              <div class="form-text">Nivel jerárquico (1-6)</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.padre.id_for_label }}" class="form-label">
+                {{ form.padre.label }}
+              </label>
+              {{ form.padre }}
+              {% if form.padre.errors %}
+                <div class="text-danger small mt-1">
+                  {{ form.padre.errors.0 }}
+                </div>
+              {% endif %}
+              <div class="form-text">Código CIIU padre (opcional). El nivel del hijo debe ser mayor que el del padre.</div>
+            </div>
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <div class="d-flex gap-2 justify-content-end">
+              <a href="{% url 'ciiu_list' %}" class="btn btn-secondary">
+                Cancelar
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i data-lucide="save" class="me-2"></i>Guardar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+</script>
+{% endblock %}
+

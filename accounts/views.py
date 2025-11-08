@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from .forms import PerfilEditForm
 import re
 
 User = get_user_model()
@@ -77,3 +79,49 @@ def register(request):
         return redirect('login')
 
     return render(request, 'registration/register.html')
+
+
+@login_required
+def perfil_view(request):
+    """
+    Vista para mostrar el perfil del usuario actualmente logueado.
+    Solo muestra su propia información.
+    """
+    user = request.user
+    context = {
+        'user': user,
+        'username': user.username,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'telephone': user.telephone,
+        'dui': user.dui,
+    }
+    return render(request, 'registration/perfil.html', context)
+
+
+@login_required
+def perfil_edit(request):
+    """
+    Vista para editar el perfil del usuario actualmente logueado.
+    Solo permite editar: first_name, last_name, telephone, email
+    NO permite cambiar: username, dui
+    """
+    user = request.user
+    
+    if request.method == 'POST':
+        form = PerfilEditForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Tu perfil ha sido actualizado correctamente.')
+            return redirect('perfil_view')
+        else:
+            messages.error(request, 'Por favor, corrige los errores en el formulario.')
+    else:
+        form = PerfilEditForm(instance=user)
+    
+    context = {
+        'form': form,
+        'user': user,
+    }
+    return render(request, 'registration/perfil_edit.html', context)
