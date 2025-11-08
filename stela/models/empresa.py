@@ -1,7 +1,6 @@
 #Clase Empresa
 from django.db import models
 from .ciiu import Ciiu
-# importar la de customuser para relacionar empresa con usuario
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
@@ -10,9 +9,10 @@ class Empresa(models.Model):
     nit = models.CharField(max_length = 14, primary_key=True)
 
     #Clasificacion CIIU Rev 4
-    idCiiu= models.ForeignKey(
-        Ciiu, 
-        on_delete=models.CASCADE
+    ciiu = models.ForeignKey(
+        Ciiu,
+        on_delete=models.PROTECT,
+        related_name='empresas_asociadas'
     )
     usuario = models.ForeignKey(
         User,
@@ -21,7 +21,7 @@ class Empresa(models.Model):
     nrc = models.CharField(max_length = 8, unique=True)
     razon_social = models.CharField(max_length=255)
     direccion = models.CharField(max_length=255)
-    telefono = models.CharField(max_length=20)
+    telefono = models.CharField(max_length=8)
     email = models.EmailField()
 
     def __str__(self):

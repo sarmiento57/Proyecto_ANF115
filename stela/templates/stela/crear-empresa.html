@@ -1,0 +1,160 @@
+{% extends '../stela/base.html' %}
+{% load static %}
+
+
+{% block css %}
+<style>
+    /* Estilo para hacer el Select2 más alto */
+    /* Asegura que el contenedor principal de Select2 tenga una altura mayor */
+    .select2-container .select2-selection--single {
+        height: 35px; /* 👈 AJUSTA ESTE VALOR: 50px es significativamente más alto que el valor predeterminado (aprox. 38px) */
+    }
+
+    /* Ajusta la línea base del texto dentro del campo para que quede centrado verticalmente */
+    .select2-container .select2-selection--single .select2-selection__rendered {
+        line-height: 30px; /* Debe ser ligeramente menor que la altura total */
+    }
+
+    /* Ajusta la posición del icono de la flecha */
+    .select2-container .select2-selection--single .select2-selection__arrow {
+        height: 48px;
+    }
+</style>
+{% endblock %}
+{% block scripts %}
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function(){
+            // 1. NIT
+            $('#id_nit').mask('0000-000000-000-0', {
+                // Mantiene la máscara visible (0000-...) cuando el campo está vacío
+                autoclear: false,
+                // Define el carácter que se muestra como guía (por defecto es _)
+                placeholder: '0000-000000-000-0'
+            });
+
+            // 2. NRC
+            $('#id_nrc').mask('000000-0', {
+                autoclear: false,
+                placeholder: '000000-0'
+            });
+
+            // 3. Teléfono
+            $('#id_telefono').mask('0000-0000', {
+                autoclear: false,
+                placeholder: '0000-0000'
+            });
+            $('#id_ciiu').select2({
+                placeholder: "Busque o seleccione su código CIIU", // Texto guía
+                allowClear: true, // Permite deseleccionar la opción
+                width: '100%' // Asegura que ocupe todo el ancho del contenedor
+            });
+        });
+    </script>
+{% endblock %}
+
+
+{% block content %}
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-md-10">
+                <div class="card">
+                    <div class="card-body">
+
+                        <h5 class="card-title">
+                            <i data-lucide="badge-plus"></i>
+                            Registrar Nueva Empresa</h5>
+
+
+                        <form action="{% url 'crear_empresa' %}" method="post">
+
+                            {% csrf_token %}
+
+                            <div class="row">
+
+                                <div class="col-md-6">
+
+                                    <div class="mb-3">
+                                    <i data-lucide="file-text"></i>
+                                        {{ form.nit.label_tag }}
+                                        {{ form.nit }}
+                                        {% if form.nit.errors %}
+                                            <div class="text-danger small">{{ form.nit.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                    <i data-lucide="file-text"></i>
+                                        {{ form.nrc.label_tag }}
+                                        {{ form.nrc }}
+                                        {% if form.nrc.errors %}
+                                            <div class="text-danger small">{{ form.nrc.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                    <i data-lucide="pencil-line"></i>
+                                        {{ form.razon_social.label_tag }}
+                                        {{ form.razon_social }}
+                                        {% if form.razon_social.errors %}
+                                            <div class="text-danger small">{{ form.razon_social.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                    <i data-lucide="signpost-big"></i>
+                                        {{ form.direccion.label_tag }}
+                                        {{ form.direccion }}
+                                        {% if form.direccion.errors %}
+                                            <div class="text-danger small">{{ form.direccion.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                    <i data-lucide="factory"></i>
+                                        {{ form.ciiu.label_tag }}
+                                        {{ form.ciiu }}
+                                        {% if form.ciiu.errors %}
+                                            <div class="text-danger small">{{ form.ciiu.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                    <i data-lucide="mail"></i>
+                                        {{ form.email.label_tag }}
+                                        {{ form.email }}
+                                        {% if form.email.errors %}
+                                            <div class="text-danger small">{{ form.email.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                    <i data-lucide="phone"></i>
+                                        {{ form.telefono.label_tag }}
+                                        {{ form.telefono }}
+                                        {% if form.telefono.errors %}
+                                            <div class="text-danger small">{{ form.telefono.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    </div>
+
+                            </div> <hr>
+
+                                <div class="d-flex justify-content-end">
+                                     <button type="submit" class="btn btn-primary">Crear Empresa</button>
+                                </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

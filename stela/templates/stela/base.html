@@ -17,6 +17,9 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- CSS de la app -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
 
     {% block css %}{% endblock %}
@@ -52,36 +55,33 @@
         <div class="company-list-wrapper position-relative mb-3">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <button id="btn-companies" class="btn btn-link p-0 fw-bold text-decoration-none">
-                    Empresas
+                    Mis Empresas
                 </button>
 
                 <button class="btn btn-sm btn-outline-light" id="btn-add-company">
-                    <i data-lucide="plus" class="mb-1"></i>
+                    <a href="{% url 'crear_empresa' %}" class="text-white text-decoration-none">
+                        <i data-lucide="plus" class="mb-1"></i>
+                     </a>
                 </button>
             </div>
 
             <div id="empresas-popup" class="empresas-popup-content p-2 rounded shadow-lg d-none">
                 <ul id="companies" class="list-unstyled small mb-0">
-                    <li class="d-flex justify-content-between align-items-center py-1 px-1">
-                        <a href="#" class="company-link text-decoration-none flex-grow-1">Company Alpha</a>
-                        <button class="btn btn-sm btn-delete-company">
-                            <i data-lucide="trash-2"></i>
-                        </button>
-                    </li>
 
                     <li class="d-flex justify-content-between align-items-center py-1 px-1">
-                        <a href="#" class="company-link text-decoration-none flex-grow-1">Company Beta</a>
-                        <button class="btn btn-sm btn-delete-company">
-                            <i data-lucide="trash-2"></i>
-                        </button>
-                    </li>
+                        {% for empresa in USER_COMPANIES %}
+                            <li class="d-flex justify-content-between align-items-center py-1 px-1">
+                                 <a href="#" class="company-link text-decoration-none flex-grow-1">
+                                    {{ empresa.razon_social }}
+                                </a>
+                                <a href="{% url 'editar_empresa' nit=empresa.nit %}" class="btn btn-sm btn-edit-company">
+                                     <i data-lucide="square-pen"></i>
+                                </a>
+                            </li>
+                        {% empty %}
+                            <li class="py-1 px-1 text-muted">No hay empresas.</li>
+                        {% endfor %}
 
-                    <li class="d-flex justify-content-between align-items-center py-1 px-1">
-                        <a href="#" class="company-link text-decoration-none flex-grow-1">Company Gamma</a>
-                        <button class="btn btn-sm btn-delete-company">
-                            <i data-lucide="trash-2"></i>
-                        </button>
-                    </li>
                 </ul>
             </div>
         </div>
@@ -89,7 +89,12 @@
         <div class="mt-auto">
         <div class="profile-section">
             <div class="profile-menu-container position-relative"> <button class="btn btn-light w-100 text-start" id="btn-profile">
-                    <i data-lucide="user" class="me-2"></i> Nombre
+                    <i data-lucide="user" class="me-2"></i>
+                {% if request.user.is_authenticated %}
+                        {{ CURRENT_USER_NAME }}
+                    {% else %}
+                        Invitado
+                    {% endif %}
                 </button>
 
                 <div id="profile-popup" class="profile-popup-content p-2 rounded shadow-lg d-none">
