@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path("", views.landing, name="landing"),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("dashboard/empresa/<str:empresa_nit>/", views.empresa_detalles, name="empresa_detalles"),
     path("crear-empresa/", views.crearEmpresa, name="crear_empresa"),
     path("tools/",views.tools,name="tools"),
     path("tools/finanzas/", views.tools_finanzas, name="tools_finanzas"),
@@ -15,4 +16,15 @@ urlpatterns = [
     path("catalogo/ciiu/crear/", views.ciiu_create, name="ciiu_create"),
     path("catalogo/ciiu/<str:codigo>/editar/", views.ciiu_update, name="ciiu_update"),
     path("catalogo/ciiu/<str:codigo>/eliminar/", views.ciiu_delete, name="ciiu_delete"),
+    
+    # URLs para Catálogo de Cuentas
+    path("catalogo/upload/", views.catalogo_upload_csv, name="catalogo_upload"),
+    path("catalogo/create/", views.catalogo_create_manual, name="catalogo_create_manual"),
+    path("catalogo/mapeo/<int:catalogo_id>/", views.catalogo_mapeo_cuentas, name="catalogo_mapeo"),
+    
+    # URLs para descargar plantillas
+    path("catalogo/plantilla/csv/", views.descargar_plantilla_catalogo_csv, name="descargar_plantilla_catalogo_csv"),
+    path("catalogo/plantilla/excel/", views.descargar_plantilla_catalogo_excel, name="descargar_plantilla_catalogo_excel"),
+    path("catalogo/plantilla/estados/csv/", views.descargar_plantilla_estados_csv, name="descargar_plantilla_estados_csv"),
+    path("catalogo/plantilla/estados/excel/<int:catalogo_id>/", views.descargar_plantilla_estados_excel, name="descargar_plantilla_estados_excel"),
 ]

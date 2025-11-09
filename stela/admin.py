@@ -11,8 +11,8 @@ admin.site.register(Venta)
 
 @admin.register(Catalogo)
 class CatalogoAdmin(admin.ModelAdmin):
-    list_display = ("empresa", "anio_catalogo")
-    list_filter = ("anio_catalogo", "empresa")
+    list_display = ("empresa", "fecha_creacion", "fecha_actualizacion")
+    list_filter = ("empresa", "fecha_creacion")
 
 @admin.register(GrupoCuenta)
 class GrupoCuentaAdmin(admin.ModelAdmin):
@@ -24,7 +24,7 @@ class GrupoCuentaAdmin(admin.ModelAdmin):
 class CuentaAdmin(admin.ModelAdmin):
     list_display = ("grupo", "codigo", "nombre", "aparece_en_balance")
     search_fields = ("codigo", "nombre")
-    list_filter = ("grupo__catalogo__empresa", "grupo__catalogo__anio_catalogo", "grupo__naturaleza")
+    list_filter = ("grupo__catalogo__empresa", "grupo__naturaleza")
 
 # Finanzas
 from stela.models.finanzas import (

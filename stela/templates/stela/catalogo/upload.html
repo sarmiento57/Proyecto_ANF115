@@ -1,0 +1,338 @@
+{% extends 'stela/base.html' %}
+{% load static %}
+{% load django_bootstrap5 %}
+{% block title %}Cargar Catálogo — Stela{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/style_dashboard.css' %}">
+<style>
+  .step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+  .step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+  }
+  .step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem;
+    font-weight: bold;
+  }
+  .step.active .step-number {
+    background-color: #0d6efd;
+    color: white;
+  }
+  .step.completed .step-number {
+    background-color: #198754;
+    color: white;
+  }
+  .step-title {
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+  .step.active .step-title {
+    color: #0d6efd;
+    font-weight: 600;
+  }
+  .step-content {
+    display: none;
+  }
+  .step-content.active {
+    display: block;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  {% include 'partials/messages.html' %}
+
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i data-lucide="upload" class="me-2"></i>Asistente de Carga de Catálogo
+          </h4>
+        </div>
+        <div class="card-body">
+          <!-- Indicador de pasos -->
+          <div class="step-indicator">
+            <div class="step active" id="step-1-indicator">
+              <div class="step-number">1</div>
+              <div class="step-title">Selecciona Empresa</div>
+            </div>
+            <div class="step" id="step-2-indicator">
+              <div class="step-number">2</div>
+              <div class="step-title">Carga Catálogo</div>
+            </div>
+            <div class="step" id="step-3-indicator">
+              <div class="step-number">3</div>
+              <div class="step-title">Carga Estados</div>
+            </div>
+          </div>
+
+          <!-- Paso 1: Selección de Empresa -->
+          <div class="step-content active" id="step-1-content">
+            <h5 class="mb-3">Paso 1: Selecciona una empresa</h5>
+            <form id="step1-form">
+              <div class="mb-3">
+                <label for="empresa-select" class="form-label">Empresa</label>
+                <select class="form-select" id="empresa-select" required>
+                  <option value="">-- Selecciona una empresa --</option>
+                  {% for empresa in empresas_usuario %}
+                  <option value="{{ empresa.nit }}" {% if empresa.nit == empresa_nit %}selected{% endif %}>{{ empresa.razon_social }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-primary" id="btn-continue-step1">
+                  Continuar
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                  Cancelar
+                </a>
+              </div>
+            </form>
+          </div>
+
+          <!-- Paso 2: Carga de Catálogo -->
+          <div class="step-content" id="step-2-content">
+            <h5 class="mb-3">Paso 2: Carga tu catálogo de cuentas</h5>
+            {% if tiene_catalogo %}
+              <div class="alert alert-warning">
+                <i data-lucide="alert-triangle" class="me-2"></i>
+                <strong>Esta empresa ya tiene un catálogo cargado.</strong> El catálogo es único por empresa. Si cargas un nuevo archivo, se actualizarán las cuentas existentes y se agregarán nuevas si las hay.
+              </div>
+            {% else %}
+              <p class="text-muted mb-3">El catálogo es único por empresa y no cambia por año. Puedes agregar cuentas después si es necesario.</p>
+            {% endif %}
+            <form method="post" enctype="multipart/form-data" id="step2-form" action="{% url 'catalogo_upload' %}?paso=2">
+              {% csrf_token %}
+              <input type="hidden" name="empresa" id="empresa-hidden" value="">
+              
+              <div class="mb-3">
+                <label for="archivo-input" class="form-label">Archivo Excel con Catálogo</label>
+                <input type="file" class="form-control" id="archivo-input" name="archivo" accept=".xlsx,.xls" required>
+              </div>
+              
+              <div class="alert alert-info mt-3">
+                <h6 class="alert-heading">Formato Excel esperado:</h6>
+                <p class="mb-0 small">
+                  El archivo debe tener una hoja llamada "Catálogo" con las columnas: <code>Código, Nombre, Grupo, Naturaleza, BG Bloque, ER Bloque, Ratio Tag</code>
+                </p>
+                <p class="mb-0 small mt-2">
+                  <strong>Naturaleza:</strong> Activo, Pasivo, Patrimonio, Ingreso, Gasto
+                </p>
+                <p class="mb-0 small mt-2">
+                  <strong>Nota:</strong> En este paso solo se cargan las cuentas del catálogo. Los valores de debe/haber se cargarán en el siguiente paso.
+                </p>
+              </div>
+
+              <div class="d-flex gap-2 mt-4">
+                <button type="button" class="btn btn-outline-secondary" id="btn-back-step2">
+                  Atrás
+                </button>
+                <button type="submit" class="btn btn-primary flex-fill">
+                  <i data-lucide="upload" class="me-2"></i>Cargar Catálogo
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                  Cancelar
+                </a>
+              </div>
+            </form>
+
+            <hr class="my-4">
+
+            <div class="text-center">
+              <p class="text-muted mb-2">¿No tienes el formato correcto?</p>
+              <div class="btn-group">
+                <!-- CSV deprecated - solo Excel disponible -->
+                <a href="{% url 'descargar_plantilla_catalogo_excel' %}" class="btn btn-outline-primary">
+                  <i data-lucide="download" class="me-2"></i>Descargar Plantilla Excel
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paso 3: Carga de Estados Financieros -->
+          <div class="step-content" id="step-3-content">
+            <h5 class="mb-3">Paso 3: Carga tus estados financieros</h5>
+            <p class="text-muted mb-4">Ahora carga el Balance General y Estado de Resultados para el período que desees analizar.</p>
+            
+            <form method="post" enctype="multipart/form-data" id="step3-form" action="{% url 'catalogo_upload' %}?paso=3">
+              {% csrf_token %}
+              <input type="hidden" name="empresa" id="empresa-hidden-step3" value="">
+              
+              <div class="mb-3">
+                <label for="anio-input-step3" class="form-label">Año del Período</label>
+                <input type="number" class="form-control" id="anio-input-step3" name="anio" min="2000" max="2100" required>
+                <small class="form-text text-muted">Año al que corresponden los estados financieros que vas a cargar.</small>
+              </div>
+              
+              <div class="mb-3">
+                <label for="archivo-estados-input" class="form-label">Archivo Excel con Estados Financieros</label>
+                <input type="file" class="form-control" id="archivo-estados-input" name="archivo" accept=".xlsx,.xls" required>
+              </div>
+              
+              <div class="alert alert-info mt-3">
+                <h6 class="alert-heading">Formato Excel esperado:</h6>
+                <p class="mb-0 small">
+                  El archivo debe tener dos hojas: <strong>"BalanceGeneral"</strong> y <strong>"EstadoResultados"</strong>
+                </p>
+                <p class="mb-0 small mt-2">
+                  Cada hoja debe tener las columnas: <code>Código, Nombre, Debe, Haber</code>
+                </p>
+                <p class="mb-0 small mt-2">
+                  Los bloques (bg_bloque, er_bloque) se obtendrán automáticamente del catálogo si no están en el archivo.
+                </p>
+              </div>
+
+              <div class="d-flex gap-2 mt-4">
+                <button type="button" class="btn btn-outline-secondary" id="btn-back-step3">
+                  Atrás
+                </button>
+                <button type="submit" class="btn btn-primary flex-fill">
+                  <i data-lucide="upload" class="me-2"></i>Cargar Estados Financieros
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                  Finalizar
+                </a>
+              </div>
+            </form>
+
+            <hr class="my-4">
+
+            <div class="text-center">
+              <p class="text-muted mb-2">¿Necesitas la plantilla?</p>
+              <div class="btn-group">
+                <!-- CSV deprecated - solo Excel disponible -->
+                <a href="#" class="btn btn-outline-primary" id="btn-download-estados-excel">
+                  <i data-lucide="download" class="me-2"></i>Descargar Plantilla Excel
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  lucide.createIcons();
+  
+  // Manejo del asistente de pasos
+  let currentStep = parseInt('{{ paso|default:"1" }}') || 1;
+  let selectedEmpresa = '{{ empresa_nit|default:"" }}';
+  let catalogoId = '{{ catalogo_id|default:"" }}';
+  
+  // Inicializar paso desde URL (siempre inicializar para asegurar estado correcto)
+  showStep(currentStep);
+  
+  // Si hay datos de empresa, rellenar campos
+  if (selectedEmpresa) {
+    const empresaSelect = document.getElementById('empresa-select');
+    if (empresaSelect) {
+      empresaSelect.value = selectedEmpresa;
+    }
+    const empresaHidden = document.getElementById('empresa-hidden');
+    if (empresaHidden) empresaHidden.value = selectedEmpresa;
+    
+    // Si estamos en paso 2 o 3 y hay empresa seleccionada, asegurar que el campo hidden tenga el valor
+    if (currentStep >= 2 && empresaHidden) {
+      empresaHidden.value = selectedEmpresa;
+    }
+  }
+  
+  // Paso 1: Continuar
+  document.getElementById('btn-continue-step1')?.addEventListener('click', function() {
+    const empresaSelect = document.getElementById('empresa-select');
+    if (empresaSelect.value) {
+      selectedEmpresa = empresaSelect.value;
+      showStep(2);
+    } else {
+      alert('Por favor selecciona una empresa');
+    }
+  });
+  
+  // Paso 2: Atrás
+  document.getElementById('btn-back-step2')?.addEventListener('click', function() {
+    showStep(1);
+  });
+  
+  // Paso 2: Actualizar campo oculto de empresa
+  document.getElementById('empresa-select')?.addEventListener('change', function() {
+    selectedEmpresa = this.value;
+    const empresaHidden = document.getElementById('empresa-hidden');
+    if (empresaHidden) empresaHidden.value = selectedEmpresa;
+  });
+  
+  // Paso 3: Atrás
+  document.getElementById('btn-back-step3')?.addEventListener('click', function() {
+    showStep(2);
+  });
+  
+  // Función para mostrar paso
+  function showStep(step) {
+    // Ocultar todos los pasos
+    document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.step').forEach(el => {
+      el.classList.remove('active', 'completed');
+    });
+    
+    // Mostrar paso actual
+    const stepContent = document.getElementById(`step-${step}-content`);
+    const stepIndicator = document.getElementById(`step-${step}-indicator`);
+    
+    if (stepContent && stepIndicator) {
+      stepContent.classList.add('active');
+      stepIndicator.classList.add('active');
+      
+      // Marcar pasos anteriores como completados
+      for (let i = 1; i < step; i++) {
+        const prevIndicator = document.getElementById(`step-${i}-indicator`);
+        if (prevIndicator) {
+          prevIndicator.classList.add('completed');
+        }
+      }
+      
+      currentStep = step;
+      
+      // Actualizar campos ocultos en paso 3
+      if (step === 3) {
+        document.getElementById('empresa-hidden-step3').value = selectedEmpresa;
+        
+        // Habilitar descarga de plantilla Excel si hay catálogo
+        const btnExcel = document.getElementById('btn-download-estados-excel');
+        
+        if (catalogoId) {
+          if (btnExcel) {
+            btnExcel.href = `/stela/catalogo/plantilla/estados/excel/${catalogoId}/`;
+            btnExcel.classList.remove('disabled');
+          }
+        } else {
+          if (btnExcel) {
+            btnExcel.href = '#';
+            btnExcel.classList.add('disabled');
+          }
+        }
+      }
+    }
+  }
+</script>
+{% endblock %}
+
+

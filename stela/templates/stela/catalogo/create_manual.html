@@ -1,0 +1,54 @@
+{% extends 'stela/base.html' %}
+{% load static %}
+{% load django_bootstrap5 %}
+{% block title %}Crear Catálogo — Stela{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/style_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  {% include 'partials/messages.html' %}
+
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i data-lucide="file-plus" class="me-2"></i>{{ titulo }}
+          </h4>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            
+            <div class="alert alert-info mt-3">
+              <p class="mb-0 small">
+                Después de crear el catálogo, podrás agregar grupos y cuentas manualmente o cargar desde Excel.
+              </p>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary flex-fill">
+                <i data-lucide="save" class="me-2"></i>Crear Catálogo
+              </button>
+              <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                Cancelar
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  lucide.createIcons();
+</script>
+{% endblock %}
+
