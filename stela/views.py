@@ -48,11 +48,18 @@ def landing(request):
     return render(request, "stela/landing.html")
 
 
-@login_required
+@access_required('002')
 def dashboard(request):
     """Vista del dashboard con información de empresas y catálogos"""
     user = request.user
-    empresas = Empresa.objects.filter(usuario=user).order_by('razon_social')
+
+    # Mostrar mensaje solo una vez por sesión
+    if not request.session.get('bienvenida_mostrada'):
+        messages.success(request, f'Bienvenido, {user.first_name} {user.last_name}')
+        request.session['bienvenida_mostrada'] = True
+        
+    # se cambio por el nuevo campo many to many 
+    empresas = Empresa.objects.filter(usuario=user).distinct().order_by('razon_social')
     
     # Búsqueda por empresa
     query = request.GET.get('q', '').strip()
@@ -80,14 +87,16 @@ def dashboard(request):
         'tiene_empresas': empresas.exists(),
         'query': query,
     }
+    
     return render(request, "dashboard/dashboard.html", context)
 
 
-@login_required
+@access_required('003')
 def empresa_detalles(request, empresa_nit):
     """Vista de detalles de una empresa: estados financieros y catálogo"""
     user = request.user
-    empresa = get_object_or_404(Empresa, nit=empresa_nit, usuario=user)
+    #se cambio por el nuevo campo many to many
+    empresa = get_object_or_404(Empresa.objects.filter(usuario=user), nit=empresa_nit)
     
     # Obtener catálogo de la empresa
     catalogo = Catalogo.objects.filter(empresa=empresa).first()
@@ -117,7 +126,7 @@ def empresa_detalles(request, empresa_nit):
     }
     return render(request, "dashboard/empresa_detalles.html", context)
 
-
+@access_required('041', stay_on_page=True)
 def crearEmpresa(request):
     # Initialize form variable outside the if block
     form = EmpresaForm()
@@ -127,7 +136,7 @@ def crearEmpresa(request):
 
         if form.is_valid():
             empresa = form.save(commit=False)
-            empresa.usuario = request.user
+            empresa.usuario.add(request.user)
             empresa.save()
             return redirect('dashboard')
 
@@ -136,11 +145,9 @@ def crearEmpresa(request):
     }
     return render(request, "stela/crear-empresa.html", context)
 
-
+@access_required('042', stay_on_page=True)
 def editarEmpresa(request, nit):
-
-    empresa = get_object_or_404(Empresa, nit=nit,
-                                usuario=request.user)
+    empresa = get_object_or_404(Empresa.objects.filter(usuario=request.user), nit=nit)
     if request.method == 'POST':
 
         form = EmpresaEditForm(request.POST, instance=empresa)
@@ -158,16 +165,11 @@ def editarEmpresa(request, nit):
     }
     return render(request, "stela/editar-empresa.html", context)
 
-
-
-
-
-
-
-
+@access_required('005')
 def tools(request):
     return render(request,'tools/tools.html')
 
+@access_required('040', stay_on_page=True)
 def tools_finanzas(request):
     # parámetros: ?nit=...&per_base=ID&periodo&per_act=ID&periodo&estado=RES|BAL
     nit = request.GET.get('nit')
@@ -180,7 +182,8 @@ def tools_finanzas(request):
         messages.info(request, "Selecciona empresa y período para calcular.")
         return render(request, "tools/tools.html", ctx)
 
-    empresa = get_object_or_404(Empresa, pk=nit)
+    # se cambio por el nuevo campo many to many
+    empresa = get_object_or_404(Empresa.objects.filter(usuario=request.user), pk=nit)
     p_act   = get_object_or_404(Periodo, pk=per_act_id)
 
     # Ratios + vertical del período actual
@@ -218,10 +221,11 @@ def tools_finanzas(request):
     })
     return render(request, "tools/tools.html", ctx)
 
-#sexo de proyecciones
+@access_required('006')
 def projections(request):
     user = request.user
-    empresas = Empresa.objects.filter(usuario=user)
+    #se cambio por el nuevo campo many to many
+    empresas = Empresa.objects.filter(usuario=user).distinct()
     empresa_seleccionada = None
     ventas = []
     proyecciones_minimos = []
@@ -230,7 +234,8 @@ def projections(request):
 
     if request.method == "POST" and "archivo_excel" in request.FILES:
         empresa_nit = request.POST.get("empresa")
-        empresa_seleccionada = Empresa.objects.get(nit=empresa_nit)
+        # se cambio por el nuevo campo many to many
+        empresa_seleccionada = get_object_or_404(Empresa.objects.filter(usuario=user), nit=empresa_nit)
         archivo = request.FILES["archivo_excel"]
 
         # eliminar registros anteriores
@@ -307,7 +312,8 @@ def projections(request):
     # procesar la empresa seleccionada
     empresa_nit = request.GET.get("empresa")
     if empresa_nit:
-        empresa_seleccionada = Empresa.objects.get(nit=empresa_nit)
+        # se cambio por el nuevo campo many to many
+        empresa_seleccionada = get_object_or_404(Empresa.objects.filter(usuario=user), nit=empresa_nit)
 
         # ventas reales
         ventas = Venta.objects.filter(
@@ -399,7 +405,7 @@ def money(value):
 
 # ========== VISTAS CRUD PARA CIIU (CATÁLOGOS) ==========
 
-@access_required('011')
+@access_required('007')
 def ciiu_list(request):
     """
     Lista todos los códigos CIIU con paginación y búsqueda.
@@ -422,7 +428,7 @@ def ciiu_list(request):
     
     # Contar empresas asociadas para cada CIIU
     for ciiu in page_obj:
-        ciiu.empresas_count = Empresa.objects.filter(idCiiu=ciiu).count()
+        ciiu.empresas_count = Empresa.objects.filter(ciiu=ciiu).count()
     
     context = {
         'page_obj': page_obj,
@@ -431,7 +437,7 @@ def ciiu_list(request):
     return render(request, 'stela/catalogo/list.html', context)
 
 
-@access_required('011')
+@access_required('036', stay_on_page=True)
 def ciiu_create(request):
     """
     Crea un nuevo código CIIU.
@@ -454,7 +460,7 @@ def ciiu_create(request):
     return render(request, 'stela/catalogo/create.html', context)
 
 
-@access_required('011')
+@access_required('037', stay_on_page=True)
 def ciiu_update(request, codigo):
     """
     Edita un código CIIU existente.
@@ -473,7 +479,7 @@ def ciiu_update(request, codigo):
         form = CiiuForm(instance=ciiu)
     
     # Contar empresas asociadas
-    empresas_count = Empresa.objects.filter(idCiiu=ciiu).count()
+    empresas_count = Empresa.objects.filter(ciiu=ciiu).count()
     hijos_count = ciiu.hijos.count()
     
     context = {
@@ -486,7 +492,7 @@ def ciiu_update(request, codigo):
     return render(request, 'stela/catalogo/update.html', context)
 
 
-@access_required('011')
+@access_required('038', stay_on_page=True)
 def ciiu_delete(request, codigo):
     """
     Elimina un código CIIU (con validación de empresas e hijos).
@@ -494,12 +500,12 @@ def ciiu_delete(request, codigo):
     ciiu = get_object_or_404(Ciiu, codigo=codigo)
     
     # Validar si tiene empresas asociadas
-    empresas_count = Empresa.objects.filter(idCiiu=ciiu).count()
+    empresas_count = Empresa.objects.filter(ciiu=ciiu).count()
     hijos_count = ciiu.hijos.count()
     
     if request.method == 'POST':
         # Verificar nuevamente antes de eliminar
-        if Empresa.objects.filter(idCiiu=ciiu).exists():
+        if Empresa.objects.filter(ciiu=ciiu).exists():
             messages.error(
                 request,
                 f'No se puede eliminar el código CIIU porque tiene {empresas_count} empresa(s) asociada(s).'
@@ -527,7 +533,7 @@ def ciiu_delete(request, codigo):
 
 # ========== VISTAS PARA CATÁLOGO DE CUENTAS ==========
 
-@login_required
+@access_required('008', stay_on_page=True)
 def catalogo_upload_csv(request):
     """
     Vista para cargar catálogo desde CSV.
@@ -549,7 +555,8 @@ def catalogo_upload_csv(request):
             return redirect('catalogo_upload')
         
         try:
-            empresa = get_object_or_404(Empresa, nit=empresa_nit, usuario=request.user)
+            # se cambio por el nuevo campo many to many
+            empresa = get_object_or_404(Empresa.objects.filter(usuario=request.user), nit=empresa_nit)
             
             # Crear o obtener catálogo (único por empresa, sin año)
             catalogo, created = Catalogo.objects.get_or_create(
@@ -827,14 +834,16 @@ def catalogo_upload_csv(request):
             messages.error(request, f"Error al procesar el archivo: {str(e)}")
     
     # Contexto para el template
-    empresas = Empresa.objects.filter(usuario=request.user).order_by('razon_social')
+    # se cambio por el nuevo campo many to many
+    empresas = Empresa.objects.filter(usuario=request.user).distinct().order_by('razon_social')
     catalogo_id = request.GET.get('catalogo_id', '')
     
     # Si hay empresa en parámetro, verificar si ya tiene catálogo
     empresa_seleccionada = None
     if empresa_nit_param:
         try:
-            empresa_seleccionada = Empresa.objects.get(nit=empresa_nit_param, usuario=request.user)
+            # se cambio por el nuevo campo many to many
+            empresa_seleccionada = get_object_or_404(Empresa.objects.filter(usuario=request.user), nit=empresa_nit_param)
             catalogo_existente = Catalogo.objects.filter(empresa=empresa_seleccionada).first()
             if catalogo_existente:
                 # Si ya tiene catálogo y estamos en paso 1, saltar al paso 3
@@ -865,7 +874,7 @@ def catalogo_upload_csv(request):
     return render(request, 'stela/catalogo/upload.html', context)
 
 
-@login_required
+@access_required('009', stay_on_page=True)
 def catalogo_create_manual(request):
     """
     Vista para crear catálogo manualmente.
@@ -896,7 +905,7 @@ def catalogo_create_manual(request):
     return render(request, 'stela/catalogo/create_manual.html', context)
 
 
-@login_required
+@access_required('010', stay_on_page=True)
 def catalogo_mapeo_cuentas(request, catalogo_id):
     """
     Vista para mapear cuentas a líneas de estado (para ratios).

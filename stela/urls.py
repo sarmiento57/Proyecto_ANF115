@@ -1,4 +1,6 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
+
 
 from . import views
 
@@ -33,4 +35,7 @@ urlpatterns = [
     path("informes/horizontal/", views.inf_horizontal, name="inf_horizontal"),
     path("informes/ratios/", views.inf_ratios, name="inf_ratios"),
     path("informes/benchmark/", views.inf_benchmark, name="inf_benchmark"),
+
+    # logout de usuario
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]
