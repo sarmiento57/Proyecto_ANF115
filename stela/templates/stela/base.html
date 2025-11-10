@@ -103,14 +103,18 @@
                         Invitado
                     {% endif %}
                 </button>
-
                 <div id="profile-popup" class="profile-popup-content p-2 rounded shadow-lg d-none">
                     <ul class="list-unstyled small mb-0">
                         <li class="py-1 px-1">
                             <a href="{% url 'perfil_view' %}" class="profile-link text-decoration-none d-block">Perfil</a>
                         </li>
                         <li class="py-1 px-1">
-                            <a href="{% url 'logout' %}" class="profile-link text-decoration-none d-block text-danger">Cerrar Sesión</a>
+                            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="profile-link text-decoration-none d-block text-danger" style="background:none;border:none;cursor:pointer;">
+                                    Cerrar Sesión
+                                </button>
+                            </form>
                         </li>
                     </ul>
                 </div>

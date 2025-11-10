@@ -1,4 +1,6 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
+
 
 from . import views
 
@@ -28,4 +30,7 @@ urlpatterns = [
     path("catalogo/plantilla/excel/", views.descargar_plantilla_catalogo_excel, name="descargar_plantilla_catalogo_excel"),
     path("catalogo/plantilla/estados/csv/", views.descargar_plantilla_estados_csv, name="descargar_plantilla_estados_csv"),
     path("catalogo/plantilla/estados/excel/<int:catalogo_id>/", views.descargar_plantilla_estados_excel, name="descargar_plantilla_estados_excel"),
+
+    # logout de usuario
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]
