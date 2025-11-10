@@ -14,6 +14,7 @@
             height: 48px;
         }
     </style>
+    <link rel="stylesheet" href="{% static 'css/error-box.css' %}">
 {% endblock %}
 
 {% block scripts %}
@@ -44,6 +45,7 @@
 
 
 {% block content %}
+{% include 'partials/messages.html' %}
     <div class="container my-5">
         <div class="row justify-content-center">
             <div class="col-lg-10 col-md-10">
