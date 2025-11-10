@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from stela.models.empresa import Empresa
-from stela.models.finanzas import Periodo, Balance, BalanceDetalle
+from stela.models.finanzas import Periodo, Balance, BalanceDetalle, ResultadoRatio
 from stela.models.catalogo import Catalogo, GrupoCuenta, Cuenta
 from stela.services.analisis import analisis_vertical, analisis_horizontal
 from stela.services.ratios import calcular_y_guardar_ratios
@@ -28,13 +28,17 @@ from stela.services.plantillas import (
 from stela.models.ciiu import Ciiu
 from stela.forms import CiiuForm, CatalogoUploadForm, CatalogoManualForm, MapeoCuentaForm
 from django.core.paginator import Paginator
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from decimal import Decimal
 import csv
 import io
 from openpyxl import load_workbook
 
 from .forms.EmpresaForm import EmpresaForm,EmpresaEditForm
+
+from .models.empresa import Empresa
+from .models.finanzas import RatioDef, Periodo, ResultadoRatio, BalanceDetalle
+from .models.catalogo import Catalogo, Cuenta
 
 # Create your views here.
 def landing(request):
@@ -998,3 +1002,159 @@ def descargar_plantilla_estados_excel(request, catalogo_id):
     )
     response['Content-Disposition'] = f'attachment; filename="plantilla_estados_{catalogo.empresa.nit}.xlsx"'
     return response
+
+
+@login_required
+def get_ratios_api(request):
+    """
+    API que devuelve la lista de TODAS las definiciones de ratios
+    (Esto es global, así que está bien como estaba).
+    """
+    try:
+        ratios = RatioDef.objects.all().values(
+            'clave', 'nombre', 'formula'
+        )
+        return JsonResponse(list(ratios), safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def get_cuentas_api(request):
+    """
+    API que devuelve la lista de cuentas del catálogo
+    DE LA EMPRESA ACTIVA (guardada en sesión).
+    """
+    try:
+        # --- Obtener empresa activa de la sesión ---
+        active_nit = request.session.get('active_company_nit')
+        if not active_nit:
+            return JsonResponse({'error': 'No hay empresa activa seleccionada'}, status=404)
+
+        empresa = get_object_or_404(Empresa, nit=active_nit, usuario=request.user)
+        # --- Fin de la obtención ---
+
+        catalogo = Catalogo.objects.filter(empresa=empresa).first()
+        if not catalogo:
+            return JsonResponse([], safe=False)
+
+        # Filtramos cuentas que pertenecen al catálogo de esa empresa
+        cuentas = Cuenta.objects.filter(grupo__catalogo=catalogo).values(
+            'id', 'codigo', 'nombre'
+        )
+        return JsonResponse(list(cuentas), safe=False)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def get_chart_data_api(request):
+    """
+    API que devuelve los datos (labels y datasets) para un conjunto
+    de ratios o cuentas DE LA EMPRESA ACTIVA.
+    """
+    try:
+        data_type = request.GET.get('type')
+        item_ids = request.GET.getlist('ids')
+
+        if not data_type or not item_ids:
+            return JsonResponse({'error': 'Faltan parámetros type o ids'}, status=400)
+
+        # --- Obtener empresa activa de la sesión ---
+        active_nit = request.session.get('active_company_nit')
+        if not active_nit:
+            return JsonResponse({'error': 'No hay empresa activa seleccionada'}, status=404)
+
+        empresa = get_object_or_404(Empresa, nit=active_nit, usuario=request.user)
+        # --- Fin de la obtención ---
+
+        periodos = Periodo.objects.filter(empresa=empresa).order_by('anio', 'mes')
+        if not periodos.exists():
+            return JsonResponse({'labels': [], 'datasets': []})  # No hay datos para graficar
+
+        labels = [f"{p.anio}-{p.mes:02d}" if p.mes else str(p.anio) for p in periodos]
+        datasets = []
+
+        if data_type == 'ratios':
+            # --- Lógica de Ratios (Completada) ---
+            for ratio_clave in item_ids:
+                try:
+                    ratio_def = RatioDef.objects.get(clave=ratio_clave)
+                    valores = []
+                    for p in periodos:
+                        # Buscamos el valor del ratio para ese período
+                        r_res = ResultadoRatio.objects.filter(
+                            empresa=empresa,
+                            periodo=p,
+                            ratio=ratio_def
+                        ).first()
+                        # Añadimos el valor o 0 si no existe
+                        valores.append(float(r_res.valor) if r_res and r_res.valor is not None else 0)
+
+                    datasets.append({
+                        'label': ratio_def.nombre,
+                        'data': valores,
+                    })
+                except RatioDef.DoesNotExist:
+                    pass  # Ignora si la clave del ratio es incorrecta
+
+        elif data_type == 'cuentas':
+            # --- Lógica de Cuentas (Completada) ---
+            for cuenta_id in item_ids:
+                try:
+                    cuenta = Cuenta.objects.get(id=cuenta_id)
+                    # Validar que la cuenta pertenezca a la empresa activa
+                    if cuenta.grupo.catalogo.empresa != empresa:
+                        continue  # Esta cuenta no es de esta empresa
+
+                    valores = []
+                    for p in periodos:
+                        # Buscamos el saldo de esa cuenta para ese período
+                        bd = BalanceDetalle.objects.filter(
+                            balance__empresa=empresa,
+                            balance__periodo=p,
+                            cuenta=cuenta
+                        ).first()
+                        # Añadimos el saldo o 0 si no existe
+                        valores.append(float(bd.saldo) if bd and bd.saldo is not None else 0)
+
+                    datasets.append({
+                        'label': f"{cuenta.codigo} - {cuenta.nombre}",
+                        'data': valores,
+                    })
+                except Cuenta.DoesNotExist:
+                    pass  # Ignora si el ID de cuenta es incorrecto
+
+        return JsonResponse({'labels': labels, 'datasets': datasets})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def set_active_company(request, empresa_nit):
+    """
+    Guarda el NIT de la empresa seleccionada en la sesión del usuario
+    y lo redirige.
+    """
+    try:
+        # 1. Verificar que la empresa existe y que el usuario tiene acceso a ella
+        empresa = get_object_or_404(
+            Empresa.objects.filter(usuario=request.user),
+            nit=empresa_nit
+        )
+
+        # 2. Guardar el NIT en la sesión
+        request.session['active_company_nit'] = empresa.nit
+        messages.success(request, f'Empresa activa cambiada a: {empresa.razon_social}')
+
+    except Exception as e:
+        messages.error(request, 'No se pudo seleccionar la empresa.')
+
+    # 3. Redirigir. 'HTTP_REFERER' lo devuelve a la página donde estaba.
+    #    Usamos el dashboard como fallback.
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return HttpResponseRedirect(referer)
+    return redirect('dashboard')

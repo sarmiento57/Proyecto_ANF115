@@ -33,4 +33,11 @@ urlpatterns = [
 
     # logout de usuario
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+
+# --- RUTAS DE API PARA LOS GRÁFICOS ---
+    path('api/get-ratios/', views.get_ratios_api, name='api_get_ratios'),
+    path('api/get-cuentas/', views.get_cuentas_api, name='api_get_cuentas'),
+
+    path('api/get-chart-data/', views.get_chart_data_api, name='api_get_chart_data'),
+    path('set-active-company/<str:empresa_nit>/', views.set_active_company, name='set_active_company'),
 ]

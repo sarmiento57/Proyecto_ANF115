@@ -75,19 +75,21 @@
             <div id="empresas-popup" class="empresas-popup-content p-2 rounded shadow-lg d-none">
                 <ul id="companies" class="list-unstyled small mb-0">
 
-                    <li class="d-flex justify-content-between align-items-center py-1 px-1">
-                        {% for empresa in USER_COMPANIES %}
-                            <li class="d-flex justify-content-between align-items-center py-1 px-1">
-                                 <a href="#" class="company-link text-decoration-none flex-grow-1">
-                                    {{ empresa.razon_social }}
-                                </a>
-                                <a href="{% url 'editar_empresa' nit=empresa.nit %}" class="btn btn-sm btn-edit-company">
-                                     <i data-lucide="square-pen"></i>
-                                </a>
-                            </li>
-                        {% empty %}
-                            <li class="py-1 px-1 text-muted">No hay empresas.</li>
-                        {% endfor %}
+                    {% for empresa in USER_COMPANIES %}
+                        <li class="d-flex justify-content-between align-items-center py-1 px-1">
+
+                            <a href="{% url 'set_active_company' empresa_nit=empresa.nit %}"
+                               class="company-link text-decoration-none flex-grow-1 {% if empresa.nit == active_company_nit %}fw-bold text-white{% endif %}">
+                                {{ empresa.razon_social }}
+                            </a>
+
+                            <a href="{% url 'editar_empresa' nit=empresa.nit %}" class="btn btn-sm btn-edit-company">
+                                <i data-lucide="square-pen"></i>
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li class="py-1 px-1 text-muted">No hay empresas.</li>
+                    {% endfor %}
 
                 </ul>
             </div>

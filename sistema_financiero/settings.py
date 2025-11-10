@@ -73,6 +73,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'stela.context_processors.user_data',
                 'stela.context_processors.empresas_usuario',
+                'stela.context_processors.company_context',
+                'stela.context_processors.company_context',
             ],
         },
     },
