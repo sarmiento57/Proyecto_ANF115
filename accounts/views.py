@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from .forms import PerfilEditForm
 import re
+from .decorators import access_required
 
 User = get_user_model()
 
@@ -81,7 +82,7 @@ def register(request):
     return render(request, 'registration/register.html')
 
 
-@login_required
+@access_required('004')
 def perfil_view(request):
     """
     Vista para mostrar el perfil del usuario actualmente logueado.
@@ -100,7 +101,7 @@ def perfil_view(request):
     return render(request, 'registration/perfil.html', context)
 
 
-@login_required
+@access_required('043', stay_on_page=True)
 def perfil_edit(request):
     """
     Vista para editar el perfil del usuario actualmente logueado.
