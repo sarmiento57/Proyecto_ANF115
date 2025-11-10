@@ -114,7 +114,8 @@ class CatalogoUploadForm(forms.Form):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user:
-            self.fields['empresa'].queryset = Empresa.objects.filter(usuario=user)
+            #se cambio por el nuevo campo many to many
+            self.fields['empresa'].queryset = Empresa.objects.filter(usuario=user).distinct()
 
 
 class CatalogoManualForm(forms.Form):
@@ -130,7 +131,8 @@ class CatalogoManualForm(forms.Form):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user:
-            self.fields['empresa'].queryset = Empresa.objects.filter(usuario=user)
+            #se cambio por el nuevo campo many to many
+            self.fields['empresa'].queryset = Empresa.objects.filter(usuario=user).distinct()
 
 
 class MapeoCuentaForm(forms.Form):

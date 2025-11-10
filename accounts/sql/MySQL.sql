@@ -16,12 +16,12 @@ VALUES
  1, NOW(), '7123-4567', '23456789-0'),
 
 -- Usuario normal 1
-('pbkdf2_sha256$720000$fZRQp9YyisgYhTdzRsxk60$QMzaxtG3Cxcltg40Sz/7Wb+qrnaYaS4R+WlBAPHmQkk=', NULL, 0, 'vegetta777',
+('pbkdf2_sha256$720000$fZRQp9YyisgYhTdzRsxk60$QMzaxtG3Cxcltg40Sz/7Wb+qrnaYaS4R+WlBAPHmQkk=', NULL, 0, '',
  'Vegetta', 'Sietesiete', 'vegettasiete@stela.com', 0,
  1, NOW(), '7777-7777', '77777777-7'),
 
 -- Usuario normal 2
-('pbkdf2_sha256$720000$UjQxZdzG3SYN4bM1CfxL6Z$KJD2IUkctkTe/5aZE3w65K+L8rVMODUxdhPInQIfYDw=', NULL, 0, 'anaStela',
+('pbkdf2_sha256$720000$UjQxZdzG3SYN4bM1CfxL6Z$KJD2IUkctkTe/5aZE3w65K+L8rVMODUxdhPInQIfYDw=', NULL, 0, '',
  'Ana', 'Martínez', 'ana@stela.com', 0,
  1, NOW(), '7890-1234', '23456789-0');
 

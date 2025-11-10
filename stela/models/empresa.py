@@ -14,10 +14,10 @@ class Empresa(models.Model):
         Ciiu, 
         on_delete=models.CASCADE
     )
-    usuario = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE, related_name='empresas'
-    )
+
+    usuario = models.ManyToManyField('accounts.CustomUser', related_name='empresas')
+
+
     nrc = models.CharField(max_length = 8, unique=True)
     razon_social = models.CharField(max_length=255)
     direccion = models.CharField(max_length=255)
