@@ -1,5 +1,86 @@
 -- ==============================================
 -- SCRIPT DE INSERCIÓN INICIAL PARA MYSQL
+-- Inserción de datos CIIU Rev. 4
+-- ==============================================
+
+INSERT INTO `stela_ciiu` (`codigo`, `descripcion`, `nivel`, `padre_id`) VALUES
+-- Nivel 1
+('I', 'ACTIVIDADES DE ALOJAMIENTO Y DE SERVICIO DE COMIDAS', 1, NULL),
+
+-- Nivel 2
+('55', 'ACTIVIDADES DE ALOJAMIENTO', 2, 'I'),
+('56', 'ACTIVIDADES DE SERVICIO DE COMIDAS Y BEBIDAS', 2, 'I'),
+
+-- Nivel 3
+('551', 'ACTIVIDADES DE ALOJAMIENTO PARA ESTANCIAS CORTAS', 3, '55'),
+('552', 'ACTIVIDADES DE CAMPAMENTOS, PARQUES DE VEHÍCULOS DE RECREO Y PARQUES DE CARAVANAS.', 3, '55'),
+('559', 'OTRAS ACTIVIDADES DE ALOJAMIENTO', 3, '55'),
+('561', 'ACTIVIDADES DE RESTAURANTES Y DE SERVICIO MÓVIL DE COMIDAS', 3, '56'),
+('562', 'SUMINISTRO DE COMIDAS POR ENCARGO Y OTRAS ACTIVIDADES DE SERVICIO DE COMIDAS', 3, '56'),
+('563', 'ACTIVIDADES DE SERVICIO DE BEBIDAS', 3, '56'),
+
+-- Nivel 4
+('5510', 'ACTIVIDADES DE ALOJAMIENTO PARA ESTANCIAS CORTAS', 4, '551'),
+('5520', 'ACTIVIDADES DE CAMPAMENTOS, PARQUES DE VEHÍCULOS DE RECREO Y PARQUES DE CARAVANAS.', 4, '552'),
+('5590', 'OTRAS ACTIVIDADES DE ALOJAMIENTO', 4, '559'),
+('5610', 'ACTIVIDADES DE RESTAURANTES Y DE SERVICIO MÓVIL DE COMIDAS', 4, '561'),
+('5621', 'SUMINISTRO DE COMIDAS POR ENCARGO', 4, '562'),
+('5629', 'OTRAS ACTIVIDADES DE SERVICIO DE COMIDAS', 4, '562'),
+('5630', 'ACTIVIDADES DE SERVICIO DE BEBIDAS', 4, '563'),
+
+-- Nivel 5
+('55100', 'Actividades de alojamiento para estancias cortas', 5, '5510'),
+('55200', 'Actividades de campamentos, parques de vehículos de recreo y parques de caravanas.', 5, '5520'),
+('55900', 'Alojamiento n.c.p.', 5, '5590'),
+('56100', 'Actividades de restaurantes y de servicio móvil de comidas', 5, '5610'),
+('56210', 'Preparación de comida para eventos especiales', 5, '5621'),
+('56291', 'Servicios de provisión de comidas por contrato', 5, '5629'),
+('56292', 'Servicios de concesión de cafetines y chalet en empresas e instituciones', 5, '5629'),
+('56299', 'Servicios de preparación de comidas n.c.p.', 5, '5629'),
+('56301', 'Servicio de expendio de bebidas alcohólicas', 5, '5630'),
+('56302', 'Servicio de expendio de bebidas no alcohólicas', 5, '5630'),
+
+-- Nivel 6
+('5510001', 'Hoteles', 6, '55100'),
+('5510002', 'Moteles', 6, '55100'),
+('5510003', 'Casa de huéspedes', 6, '55100'),
+('5510004', 'Hostal', 6, '55100'),
+('5510005', 'Hospedaje (pensiones)', 6, '55100'),
+('5520001', 'Alojamiento en Camping', 6, '55200'),
+('5590001', 'Vías deportivas (alojamiento para deportistas)', 6, '55900'),
+('5590002', 'Tiempo compartido', 6, '55900'),
+('5590003', 'Refugios', 6, '55900'),
+('5590004', 'Casa de retiros', 6, '55900'),
+('5610001', 'Pizzerías (pizzas y otros)', 6, '56100'),
+('5610002', 'Venta de hamburguesas y otros alimentos preparados para consumo inmediato', 6, '56100'),
+('5610003', 'Venta de pollos rostizados, empanizados, fritos, asados, etc. y otros alimentos preparados para consumo inmediato', 6, '56100'),
+('5610004', 'Venta de tacos y otros alimentos similares preparados para consumo inmediato', 6, '56100'),
+('5610005', 'Comedor', 6, '56100'),
+('5610006', 'Cafetería', 6, '56100'),
+('5610007', 'Merenderos, puestos de refrigerio, venta de sopas y otros alimentos similares', 6, '56100'),
+('5610008', 'Venta de panes rellenos, sándwiches, hot dog, etc.', 6, '56100'),
+('5610009', 'Chalet en puestos de venta, mercados y ferias', 6, '56100'),
+('5610010', 'Comedor en puestos de venta, mercados, ambulante y ferias', 6, '56100'),
+('5610011', 'Venta de encurtidos, verduras cocidas y ensaladas en puestos de venta, mercados, ambulante y ferias', 6, '56100'),
+('5610012', 'Venta de conchas, ostras y otros mariscos, alimentos preparados y bebidas en puestos de mercados y ferias', 6, '56100'),
+('5610013', 'Pupusería', 6, '56100'),
+('5610014', 'Venta de tamales', 6, '56100'),
+('5610015', 'Venta de empanadas, pasteles, yuca y otros típicos', 6, '56100'),
+('5610016', 'Chilaterías y venta de atoles', 6, '56100'),
+('5610017', 'Restaurantes', 6, '56100'),
+('5610018', 'Venta de conchas, ostras y otros mariscos, alimentos preparados y bebidas', 6, '56100'),
+('5610019', 'Venta de productos helados con o sin leche de diferentes sabores (incluye la venta ambulante)', 6, '56100'),
+('5610020', 'Pupusería en puestos de venta, mercados y ferias', 6, '56100'),
+('5621001', 'Alimentos preparados a domicilio por encargo o para eventos', 6, '56210'),
+('5629101', 'Servicios de comida por contrata', 6, '56291'),
+('5629201', 'Servicios de concesión de cafetines y chalet en empresas e instituciones', 6, '56292'),
+('5629901', 'Servicios de preparación de comidas n.c.p.', 6, '56299'),
+('5630101', 'Cervecería (salón)', 6, '56301'),
+('5630102', 'Bares', 6, '56301'),
+('5630201', 'Servicio de bebidas refrescantes (refresquerías, venta de jugos naturales, batidos, etc.)', 6, '56302'),
+('5630202', 'Servicio de bebida: café, atoles, etc.', 6, '56302');
+
+-- ==============================================
 -- Tablas: CustomUser, Empresa, OptionForm, UserAccess
 -- ==============================================
 
