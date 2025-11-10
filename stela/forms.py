@@ -1,5 +1,8 @@
 from django import forms
 from stela.models.ciiu import Ciiu
+from stela.models.empresa import Empresa
+from stela.models.catalogo import Catalogo, Cuenta
+from stela.models.finanzas import LineaEstado, MapeoCuentaLinea
 
 
 class CiiuForm(forms.ModelForm):
@@ -88,5 +91,79 @@ class CiiuForm(forms.ModelForm):
                 )
         
         return cleaned_data
+
+
+class CatalogoUploadForm(forms.Form):
+    """Formulario para subir catálogo desde CSV"""
+    empresa = forms.ModelChoiceField(
+        queryset=Empresa.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label='Empresa',
+        required=True
+    )
+    archivo = forms.FileField(
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': '.csv,.xlsx,.xls'
+        }),
+        label='Archivo CSV/Excel',
+        required=True
+    )
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['empresa'].queryset = Empresa.objects.filter(usuario=user)
+
+
+class CatalogoManualForm(forms.Form):
+    """Formulario para crear catálogo manualmente"""
+    empresa = forms.ModelChoiceField(
+        queryset=Empresa.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label='Empresa',
+        required=True
+    )
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['empresa'].queryset = Empresa.objects.filter(usuario=user)
+
+
+class MapeoCuentaForm(forms.Form):
+    """Formulario dinámico para mapear cuentas a líneas de estado"""
+    
+    def __init__(self, *args, **kwargs):
+        catalogo = kwargs.pop('catalogo', None)
+        super().__init__(*args, **kwargs)
+        
+        if catalogo:
+            # Obtener todas las líneas de estado
+            lineas = LineaEstado.objects.all().order_by('estado', 'clave')
+            
+            # Obtener todas las cuentas del catálogo
+            cuentas = Cuenta.objects.filter(grupo__catalogo=catalogo).order_by('codigo')
+            
+            # Crear un campo select para cada línea de estado
+            for linea in lineas:
+                field_name = f'linea_{linea.clave}'
+                self.fields[field_name] = forms.ModelChoiceField(
+                    queryset=cuentas,
+                    widget=forms.Select(attrs={'class': 'form-select'}),
+                    label=f"{linea.nombre} ({linea.get_estado_display()})",
+                    required=False,
+                    empty_label="-- Seleccione una cuenta --"
+                )
+                
+                # Si ya existe un mapeo, establecer el valor inicial
+                try:
+                    mapeo = MapeoCuentaLinea.objects.filter(linea=linea).first()
+                    if mapeo and mapeo.cuenta.grupo.catalogo == catalogo:
+                        self.fields[field_name].initial = mapeo.cuenta
+                except:
+                    pass
 
 

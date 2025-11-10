@@ -7,7 +7,7 @@ from stela.models.catalogo import Catalogo, GrupoCuenta, Cuenta
 from stela.services.estados import recalcular_saldos_detalle
 
 """
-CSV esperado: codigo,nombre,grupo,naturaleza(A/L/P/I/G),debe,haber
+CSV esperado: codigo,nombre,grupo,naturaleza(Activo/Pasivo/Patrimonio/Ingreso/Gasto),debe,haber
 """
 
 class Command(BaseCommand):
@@ -56,7 +56,7 @@ class Command(BaseCommand):
                     codigo = row['codigo'].strip()
                     nombre = row['nombre'].strip()
                     grupo_nombre = row['grupo'].strip()
-                    nat = row['naturaleza'].strip().upper()  # A/L/P/I/G
+                    nat = row['naturaleza'].strip()  # Activo/Pasivo/Patrimonio/Ingreso/Gasto
                     debe = Decimal(row.get('debe','0') or '0')
                     haber = Decimal(row.get('haber','0') or '0')
                 except KeyError as e:

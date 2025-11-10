@@ -1,0 +1,273 @@
+{% extends '../stela/base.html' %}
+{% load static %}
+{% block title %}Stela — Detalles de {{ empresa.razon_social }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/style_dashboard.css' %}">
+<style>
+  .periodo-card {
+    border-left: 4px solid #366092;
+  }
+  .balance-section {
+    margin-bottom: 1.5rem;
+  }
+  .cuenta-row {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+  .cuenta-row:last-child {
+    border-bottom: none;
+  }
+  .subtotal-row {
+    font-weight: bold;
+    background-color: #f8f9fa;
+    padding: 0.75rem 0;
+    border-top: 2px solid #366092;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  {% include 'partials/messages.html' %}
+
+  <!-- Header con botón de regreso -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary mb-2">
+        <i data-lucide="arrow-left" class="me-2"></i>Volver al Dashboard
+      </a>
+      <h2 class="mb-0">{{ empresa.razon_social }}</h2>
+      <p class="text-muted mb-0">NIT: {{ empresa.nit }}</p>
+    </div>
+  </div>
+
+  <!-- Asistente para cargar catálogo y estados financieros -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">
+        <i data-lucide="upload" class="me-2"></i>Asistente de Carga
+      </h5>
+    </div>
+    <div class="card-body">
+      {% if tiene_catalogo %}
+        <p class="text-muted mb-3">Esta empresa ya tiene un catálogo cargado. Puedes cargar estados financieros para nuevos períodos.</p>
+        <div class="d-flex gap-2">
+          <a href="{% url 'catalogo_upload' %}?empresa={{ empresa.nit }}&paso=3&catalogo_id={{ catalogo.id_catalogo }}" class="btn btn-primary">
+            <i data-lucide="upload" class="me-2"></i>Cargar Estados Financieros
+          </a>
+          <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+              <i data-lucide="download" class="me-2"></i>Descargar Plantillas
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{% url 'descargar_plantilla_estados_excel' catalogo.id_catalogo %}">
+                <i data-lucide="file-text" class="me-2"></i>Plantilla de Estados Financieros (Excel)
+              </a></li>
+            </ul>
+          </div>
+        </div>
+      {% else %}
+        <p class="text-muted mb-3">Utiliza el asistente para cargar el catálogo de cuentas y los estados financieros de esta empresa.</p>
+        <div class="d-flex gap-2">
+          <a href="{% url 'catalogo_upload' %}?empresa={{ empresa.nit }}&paso=2" class="btn btn-primary">
+            <i data-lucide="upload" class="me-2"></i>Cargar Catálogo y Estados Financieros
+          </a>
+          <a href="{% url 'descargar_plantilla_catalogo_excel' %}" class="btn btn-outline-secondary">
+            <i data-lucide="download" class="me-2"></i>Descargar Plantilla de Catálogo
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Estados Financieros -->
+  <section class="mb-4">
+    <h3 class="mb-3">
+      <i data-lucide="file-text" class="me-2"></i>Estados Financieros
+    </h3>
+    
+    {% if periodos %}
+      {% for periodo, balances in balances_por_periodo.items %}
+        <div class="card periodo-card mb-3">
+          <div class="card-header">
+            <h5 class="mb-0">
+              Período: {{ periodo.anio }}{% if periodo.mes %}/{{ periodo.mes|stringformat:"02d" }}{% endif %}
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Balance General -->
+              <div class="col-12 col-md-6 balance-section">
+                <h6 class="text-primary mb-3">Balance General</h6>
+                {% if balances.balance %}
+                  {% with balance=balances.balance %}
+                    <div class="table-responsive">
+                      <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                          <tr>
+                            <th>Cuenta</th>
+                            <th class="text-end">Saldo</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for detalle in balance.detalles.all|slice:":10" %}
+                            <tr>
+                              <td>{{ detalle.cuenta.nombre }}</td>
+                              <td class="text-end">${{ detalle.saldo|floatformat:2 }}</td>
+                            </tr>
+                          {% empty %}
+                            <tr>
+                              <td colspan="2" class="text-center text-muted">No hay detalles</td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    {% if balance.detalles.count > 10 %}
+                      <p class="text-muted small mt-2">Mostrando 10 de {{ balance.detalles.count }} cuentas</p>
+                    {% endif %}
+                  {% endwith %}
+                {% else %}
+                  <p class="text-muted">No hay balance general para este período</p>
+                {% endif %}
+              </div>
+
+              <!-- Estado de Resultados -->
+              <div class="col-12 col-md-6 balance-section">
+                <h6 class="text-success mb-3">Estado de Resultados</h6>
+                {% if balances.resultados %}
+                  {% with balance=balances.resultados %}
+                    <div class="table-responsive">
+                      <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                          <tr>
+                            <th>Cuenta</th>
+                            <th class="text-end">Saldo</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for detalle in balance.detalles.all|slice:":10" %}
+                            <tr>
+                              <td>{{ detalle.cuenta.nombre }}</td>
+                              <td class="text-end">${{ detalle.saldo|floatformat:2 }}</td>
+                            </tr>
+                          {% empty %}
+                            <tr>
+                              <td colspan="2" class="text-center text-muted">No hay detalles</td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    {% if balance.detalles.count > 10 %}
+                      <p class="text-muted small mt-2">Mostrando 10 de {{ balance.detalles.count }} cuentas</p>
+                    {% endif %}
+                  {% endwith %}
+                {% else %}
+                  <p class="text-muted">No hay estado de resultados para este período</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <p class="text-muted mb-3">No hay estados financieros cargados para esta empresa.</p>
+          {% if tiene_catalogo %}
+            <a href="{% url 'catalogo_upload' %}?empresa={{ empresa.nit }}&paso=3&catalogo_id={{ catalogo.id_catalogo }}" class="btn btn-primary">
+              <i data-lucide="upload" class="me-2"></i>Cargar Estados Financieros
+            </a>
+          {% else %}
+            <a href="{% url 'catalogo_upload' %}?empresa={{ empresa.nit }}&paso=2" class="btn btn-primary">
+              <i data-lucide="upload" class="me-2"></i>Cargar Catálogo y Estados Financieros
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- Catálogo de Cuentas -->
+  <section class="mb-4">
+    <h3 class="mb-3">
+      <i data-lucide="book" class="me-2"></i>Catálogo de Cuentas
+    </h3>
+    
+    {% if tiene_catalogo and cuentas %}
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover" id="catalog-table">
+              <thead class="table-light">
+                <tr>
+                  <th>Código</th>
+                  <th>Nombre</th>
+                  <th>Grupo</th>
+                  <th>Naturaleza</th>
+                  <th>BG Bloque</th>
+                  <th>ER Bloque</th>
+                  <th>Ratio Tag</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for cuenta in cuentas %}
+                  <tr>
+                    <td>{{ cuenta.codigo }}</td>
+                    <td>{{ cuenta.nombre }}</td>
+                    <td>{{ cuenta.grupo.nombre }}</td>
+                    <td>{{ cuenta.grupo.get_naturaleza_display }}</td>
+                    <td>
+                      {% if cuenta.bg_bloque %}
+                        <span class="badge bg-info">{{ cuenta.bg_bloque }}</span>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if cuenta.er_bloque %}
+                        <span class="badge bg-success">{{ cuenta.er_bloque }}</span>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if cuenta.ratio_tag %}
+                        <span class="badge bg-warning text-dark">{{ cuenta.ratio_tag }}</span>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <p class="text-muted mb-3">No hay catálogo cargado para esta empresa.</p>
+          <a href="{% url 'catalogo_upload' %}?empresa={{ empresa.nit }}&paso=2" class="btn btn-primary">
+            <i data-lucide="upload" class="me-2"></i>Cargar Catálogo
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // Inicializar iconos de Lucide
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+</script>
+{% endblock %}
+

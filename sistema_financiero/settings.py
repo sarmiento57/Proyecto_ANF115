@@ -72,6 +72,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'stela.context_processors.user_data',
+                'stela.context_processors.empresas_usuario',
             ],
         },
     },

@@ -1,0 +1,65 @@
+{% extends 'stela/base.html' %}
+{% load static %}
+{% load django_bootstrap5 %}
+{% block title %}Mapeo de Cuentas — Stela{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/style_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  {% include 'partials/messages.html' %}
+
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i data-lucide="link" class="me-2"></i>{{ titulo }}
+          </h4>
+          <small class="text-white-50">Catálogo: {{ catalogo.empresa.razon_social }} - Año {{ catalogo.anio_catalogo }}</small>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning">
+            <i data-lucide="alert-triangle" class="me-2"></i>
+            <strong>Importante:</strong> Mapea las cuentas del catálogo a las líneas de estado necesarias para calcular los ratios financieros.
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+              {% for field in form %}
+              <div class="col-md-6 mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                  <div class="text-danger small">{{ field.errors.0 }}</div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary flex-fill">
+                <i data-lucide="save" class="me-2"></i>Guardar Mapeo
+              </button>
+              <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                Cancelar
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  lucide.createIcons();
+</script>
+{% endblock %}
+
