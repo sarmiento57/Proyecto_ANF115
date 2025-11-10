@@ -7,6 +7,10 @@ from .forms import PerfilEditForm
 import re
 from .decorators import access_required
 
+# importar modelos necesarios para asignar permisos
+from stela.models import Empresa
+from accounts.models import OptionForm, UserAccess
+
 User = get_user_model()
 
 def register(request):
@@ -26,7 +30,6 @@ def register(request):
         if not all([first_name, last_name, email, dui, phone, username, password, password2]):
             messages.error(request, 'Todos los campos son obligatorios')
             return render(request, 'registration/register.html', context)
-
 
         # mascara de tel ####-####
         if not re.match(r'^\d{4}-\d{4}$', phone):
@@ -66,7 +69,6 @@ def register(request):
             return render(request, 'registration/register.html', context)
 
         # crear usuario
-        
         user = User.objects.create_user(
             username=username,
             password=password,
@@ -76,10 +78,29 @@ def register(request):
             last_name=last_name,
             telephone=phone
         )
-        messages.success(request, 'Usuario registrado correctamente, inicie sesión con sus credenciales.')
+
+        # asignar permisos completos al usuario
+        opciones = OptionForm.objects.all()
+        empresas = Empresa.objects.all()
+
+        accesos = []
+        for empresa in empresas:
+            for opcion in opciones:
+                accesos.append(UserAccess(
+                    userId=user,
+                    optionId=opcion,
+                    companyId=empresa
+                ))
+
+        # guardar todos los accesos en bloque
+        UserAccess.objects.bulk_create(accesos)
+
+        # mensaje final de confirmación
+        messages.success(request, 'Usuario registrado correctamente, se le asignó acceso completo al sistema. Inicie sesión con sus credenciales.')
         return redirect('login')
 
     return render(request, 'registration/register.html')
+
 
 
 @access_required('004')
