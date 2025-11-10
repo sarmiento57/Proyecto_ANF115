@@ -167,3 +167,8 @@ class MapeoCuentaForm(forms.Form):
                     pass
 
 
+# Importar formularios desde el subdirectorio forms
+from stela.forms.EmpresaForm import (
+    EmpresaForm,
+    EmpresaEditForm
+)
