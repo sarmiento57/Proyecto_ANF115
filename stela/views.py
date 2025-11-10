@@ -34,6 +34,7 @@ import csv
 import io
 from openpyxl import load_workbook
 
+from .forms.EmpresaForm import EmpresaForm,EmpresaEditForm
 
 # Create your views here.
 def landing(request):
@@ -109,8 +110,53 @@ def empresa_detalles(request, empresa_nit):
     }
     return render(request, "dashboard/empresa_detalles.html", context)
 
+
 def crearEmpresa(request):
-    return render(request, "stela/base.html")
+    # Initialize form variable outside the if block
+    form = EmpresaForm()
+
+    if request.method == 'POST':
+        form = EmpresaForm(request.POST)
+
+        if form.is_valid():
+            empresa = form.save(commit=False)
+            empresa.usuario = request.user
+            empresa.save()
+            return redirect('dashboard')
+
+    context = {
+        'form': form
+    }
+    return render(request, "stela/crear-empresa.html", context)
+
+
+def editarEmpresa(request, nit):
+
+    empresa = get_object_or_404(Empresa, nit=nit,
+                                usuario=request.user)
+    if request.method == 'POST':
+
+        form = EmpresaEditForm(request.POST, instance=empresa)
+
+        if form.is_valid():
+            form.save()
+            return redirect('dashboard')
+
+    else:
+        form = EmpresaEditForm(instance=empresa)
+
+    context = {
+        'form': form,
+        'empresa': empresa
+    }
+    return render(request, "stela/editar-empresa.html", context)
+
+
+
+
+
+
+
 
 def tools(request):
     return render(request,'tools/tools.html')
