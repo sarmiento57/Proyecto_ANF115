@@ -45,6 +45,12 @@ def landing(request):
 def dashboard(request):
     """Vista del dashboard con información de empresas y catálogos"""
     user = request.user
+
+    # Mostrar mensaje solo una vez por sesión
+    if not request.session.get('bienvenida_mostrada'):
+        messages.success(request, f'Bienvenido, {user.first_name} {user.last_name}')
+        request.session['bienvenida_mostrada'] = True
+        
     # se cambio por el nuevo campo many to many 
     empresas = Empresa.objects.filter(usuario=user).distinct().order_by('razon_social')
     
@@ -74,6 +80,7 @@ def dashboard(request):
         'tiene_empresas': empresas.exists(),
         'query': query,
     }
+    
     return render(request, "dashboard/dashboard.html", context)
 
 
