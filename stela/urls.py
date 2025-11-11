@@ -25,6 +25,9 @@ urlpatterns = [
     path("catalogo/create/", views.catalogo_create_manual, name="catalogo_create_manual"),
     path("catalogo/mapeo/<int:catalogo_id>/", views.catalogo_mapeo_cuentas, name="catalogo_mapeo"),
     
+    # URLs para eliminar estados financieros
+    path("balance/eliminar/<int:balance_id>/", views.eliminar_balance, name="eliminar_balance"),
+    
     # URLs para descargar plantillas
     path("catalogo/plantilla/csv/", views.descargar_plantilla_catalogo_csv, name="descargar_plantilla_catalogo_csv"),
     path("catalogo/plantilla/excel/", views.descargar_plantilla_catalogo_excel, name="descargar_plantilla_catalogo_excel"),
@@ -38,4 +41,11 @@ urlpatterns = [
 
     # logout de usuario
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+
+# --- RUTAS DE API PARA LOS GRÁFICOS ---
+    path('api/get-ratios/', views.get_ratios_api, name='api_get_ratios'),
+    path('api/get-cuentas/', views.get_cuentas_api, name='api_get_cuentas'),
+
+    path('api/get-chart-data/', views.get_chart_data_api, name='api_get_chart_data'),
+    path('set-active-company/<str:empresa_nit>/', views.set_active_company, name='set_active_company'),
 ]

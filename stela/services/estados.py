@@ -73,13 +73,14 @@ def calcular_totales_por_seccion(balance: Balance):
         totales_seccion.get('GASTOS_OPERATIVOS', Decimal('0'))
     )
     
-    # Utilidad Neta = Utilidad Operativa - Gasto Financiero + Otros Ingresos - Otros Gastos
+    # Utilidad Neta = Utilidad Operativa - Gasto Financiero + Otros Ingresos - Otros Gastos - Impuesto sobre la Renta
     utilidad_operativa = secciones_calculadas.get('UTILIDAD_OPERATIVA', Decimal('0'))
     secciones_calculadas['UTILIDAD_NETA'] = (
         utilidad_operativa -
         totales_seccion.get('GASTO_FINANCIERO', Decimal('0')) +
         totales_seccion.get('OTROS_INGRESOS', Decimal('0')) -
-        totales_seccion.get('OTROS_GASTOS', Decimal('0'))
+        totales_seccion.get('OTROS_GASTOS', Decimal('0')) -
+        totales_seccion.get('IMPUESTO_SOBRE_LA_RENTA', Decimal('0'))
     )
     
     # Combinar totales directos y calculados
@@ -90,8 +91,26 @@ def calcular_totales_por_seccion(balance: Balance):
 
 def estado_dict(empresa, periodo, tipo_estado):
     """
-    Devuelve {clave: {'nombre', 'monto', 'base'}}
-    suma los saldos de las cuentas mapeadas a cada línea.
+    Calcula los valores de las líneas de estado para un período específico.
+    
+    Flujo de cálculo:
+    1. Obtiene el Balance del período y tipo especificado
+    2. Obtiene todos los BalanceDetalle (saldos de cuentas)
+    3. Para cada LineaEstado del tipo especificado:
+       - Busca todas las cuentas mapeadas (MapeoCuentaLinea)
+       - Suma los saldos de esas cuentas (aplicando el signo del mapeo)
+    4. Devuelve un diccionario con las claves de línea y sus valores
+    
+    Este diccionario se usa luego para calcular ratios en calcular_y_guardar_ratios().
+    
+    Args:
+        empresa: Instancia de Empresa
+        periodo: Instancia de Periodo
+        tipo_estado: 'BAL' o 'RES'
+        
+    Returns:
+        dict: {clave_linea: {'nombre': str, 'monto': Decimal, 'base': bool}}
+        Ejemplo: {'ACTIVO_CORRIENTE': {'nombre': 'Activo Corriente', 'monto': 150000, 'base': False}}
     """
     bal = Balance.objects.get(empresa=empresa, periodo=periodo, tipo_balance=tipo_estado)
     # Pre-indexar detalle por cuenta para velocidad
@@ -100,10 +119,21 @@ def estado_dict(empresa, periodo, tipo_estado):
     data = {}
     for le in LineaEstado.objects.filter(estado=tipo_estado):
         total = Decimal('0')
-        for map_ in MapeoCuentaLinea.objects.filter(linea=le).only('cuenta_id','signo'):
-            det = by_cuenta.get(map_.cuenta_id)
-            if not det:
-                continue
-            total += (det.saldo or 0) * map_.signo
+        
+        # Si es UTILIDAD_NETA, calcular desde los bloques consolidados (er_bloque)
+        if le.clave == 'UTILIDAD_NETA':
+            # UTILIDAD_NETA se calcula desde los bloques consolidados del Estado de Resultados
+            # Las cuentas ya están agrupadas por er_bloque, así que usamos calcular_totales_por_seccion
+            # que agrupa por er_bloque y calcula UTILIDAD_NETA automáticamente
+            totales = calcular_totales_por_seccion(bal)
+            total = totales.get('UTILIDAD_NETA', Decimal('0'))
+        else:
+            # Para otras líneas, usar mapeos normales
+            for map_ in MapeoCuentaLinea.objects.filter(linea=le).only('cuenta_id','signo'):
+                det = by_cuenta.get(map_.cuenta_id)
+                if not det:
+                    continue
+                total += (det.saldo or 0) * map_.signo
+        
         data[le.clave] = {'nombre': le.nombre, 'monto': total, 'base': le.base_vertical}
     return data

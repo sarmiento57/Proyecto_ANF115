@@ -136,37 +136,157 @@ class CatalogoManualForm(forms.Form):
 
 
 class MapeoCuentaForm(forms.Form):
-    """Formulario dinámico para mapear cuentas a líneas de estado"""
+    """Formulario dinámico para mapear cuentas a líneas de estado.
+    
+    Permite seleccionar MÚLTIPLES cuentas por cada línea de estado,
+    ya que varias cuentas pueden contribuir al mismo concepto financiero.
+    
+    Solo muestra las líneas de estado requeridas para los ratios esenciales:
+    - TOTAL_ACTIVO, ACTIVO_CORRIENTE, PASIVO_CORRIENTE (Balance)
+    - VENTAS_NETAS, UTILIDAD_NETA (Resultados)
+    """
     
     def __init__(self, *args, **kwargs):
         catalogo = kwargs.pop('catalogo', None)
         super().__init__(*args, **kwargs)
         
         if catalogo:
-            # Obtener todas las líneas de estado
-            lineas = LineaEstado.objects.all().order_by('estado', 'clave')
+            # Líneas de estado requeridas para los ratios esenciales
+            # Para Balance:
+            lineas_balance = [
+                'TOTAL_ACTIVO',
+                'ACTIVO_CORRIENTE',
+                'PASIVO_CORRIENTE',
+            ]
             
-            # Obtener todas las cuentas del catálogo
-            cuentas = Cuenta.objects.filter(grupo__catalogo=catalogo).order_by('codigo')
+            # Para Resultados: todas las líneas que componen UTILIDAD_NETA
+            # UTILIDAD_NETA no se incluye porque se calcula automáticamente desde estas
+            lineas_resultados = [
+                'VENTAS_NETAS',
+                'COSTO_NETO_VENTAS',  # Puede ser COSTO_VENTAS o COSTO_NETO_VENTAS
+                'GASTOS_OPERATIVOS',
+                'GASTO_FINANCIERO',
+                'OTROS_INGRESOS',
+                'OTROS_GASTOS',
+                'IMPUESTO_SOBRE_LA_RENTA',
+            ]
             
-            # Crear un campo select para cada línea de estado
+            # Crear líneas de estado que no existan
+            nombres_lineas = {
+                'COSTO_NETO_VENTAS': 'Costo Neto de Ventas',
+                'GASTOS_OPERATIVOS': 'Gastos Operativos',
+                'GASTO_FINANCIERO': 'Gasto Financiero',
+                'OTROS_INGRESOS': 'Otros Ingresos',
+                'OTROS_GASTOS': 'Otros Gastos',
+                'IMPUESTO_SOBRE_LA_RENTA': 'Impuesto sobre la Renta',
+            }
+            
+            for clave in lineas_resultados:
+                if clave not in ['VENTAS_NETAS']:  # VENTAS_NETAS ya existe
+                    LineaEstado.objects.get_or_create(
+                        clave=clave,
+                        estado='RES',
+                        defaults={
+                            'nombre': nombres_lineas.get(clave, clave.replace('_', ' ').title()),
+                            'base_vertical': False
+                        }
+                    )
+            
+            # También verificar si existe COSTO_VENTAS (puede ser el nombre alternativo)
+            # Si existe COSTO_VENTAS pero no COSTO_NETO_VENTAS, usar COSTO_VENTAS
+            if not LineaEstado.objects.filter(clave='COSTO_NETO_VENTAS').exists():
+                if LineaEstado.objects.filter(clave='COSTO_VENTAS').exists():
+                    # Usar COSTO_VENTAS en lugar de COSTO_NETO_VENTAS
+                    lineas_resultados = [l if l != 'COSTO_NETO_VENTAS' else 'COSTO_VENTAS' for l in lineas_resultados]
+            
+            # Obtener todas las líneas requeridas
+            lineas_requeridas = lineas_balance + lineas_resultados
+            lineas = LineaEstado.objects.filter(clave__in=lineas_requeridas).order_by('estado', 'clave')
+            
+            # Obtener todas las cuentas del catálogo con información de grupo y naturaleza
+            cuentas = Cuenta.objects.filter(grupo__catalogo=catalogo).select_related('grupo').order_by('codigo')
+            
+            # Crear un campo de selección múltiple para cada línea de estado requerida
             for linea in lineas:
                 field_name = f'linea_{linea.clave}'
-                self.fields[field_name] = forms.ModelChoiceField(
+                
+                # Determinar cuentas pre-seleccionadas basándose en:
+                # 1. Mapeos existentes (prioridad)
+                # 2. ratio_tag
+                # 3. bg_bloque (para líneas de Balance)
+                # 4. er_bloque (para líneas de Resultados)
+                
+                cuentas_preseleccionadas = set()
+                
+                # 1. Mapeos existentes
+                mapeos_existentes = MapeoCuentaLinea.objects.filter(
+                    linea=linea,
+                    cuenta__grupo__catalogo=catalogo
+                ).values_list('cuenta_id', flat=True)
+                cuentas_preseleccionadas.update(mapeos_existentes)
+                
+                # 2. Por ratio_tag
+                if linea.clave in ['TOTAL_ACTIVO', 'ACTIVO_CORRIENTE', 'PASIVO_CORRIENTE', 'VENTAS_NETAS']:
+                    cuentas_por_tag = cuentas.filter(
+                        ratio_tag=linea.clave
+                    ).values_list('id_cuenta', flat=True)
+                    cuentas_preseleccionadas.update(cuentas_por_tag)
+                
+                # 3. Por bg_bloque (para líneas de Balance)
+                if linea.estado == 'BAL':
+                    if linea.clave == 'ACTIVO_CORRIENTE':
+                        cuentas_por_bloque = cuentas.filter(
+                            bg_bloque='ACTIVO_CORRIENTE'
+                        ).values_list('id_cuenta', flat=True)
+                        cuentas_preseleccionadas.update(cuentas_por_bloque)
+                    elif linea.clave == 'PASIVO_CORRIENTE':
+                        cuentas_por_bloque = cuentas.filter(
+                            bg_bloque='PASIVO_CORRIENTE'
+                        ).values_list('id_cuenta', flat=True)
+                        cuentas_preseleccionadas.update(cuentas_por_bloque)
+                    elif linea.clave == 'TOTAL_ACTIVO':
+                        # TOTAL_ACTIVO: todas las cuentas de activo
+                        cuentas_activo = cuentas.filter(
+                            grupo__naturaleza='Activo',
+                            bg_bloque__in=['ACTIVO_CORRIENTE', 'ACTIVO_NO_CORRIENTE']
+                        ).values_list('id_cuenta', flat=True)
+                        cuentas_preseleccionadas.update(cuentas_activo)
+                
+                # 4. Por er_bloque (para líneas de Resultados)
+                if linea.estado == 'RES':
+                    # Mapear según er_bloque de las cuentas
+                    # Mapeo de claves de línea a bloques er_bloque
+                    mapeo_bloques = {
+                        'VENTAS_NETAS': 'VENTAS_NETAS',
+                        'COSTO_VENTAS': 'COSTO_NETO_VENTAS',  # COSTO_VENTAS mapea a COSTO_NETO_VENTAS
+                        'COSTO_NETO_VENTAS': 'COSTO_NETO_VENTAS',
+                        'GASTOS_OPERATIVOS': 'GASTOS_OPERATIVOS',
+                        'GASTO_FINANCIERO': 'GASTO_FINANCIERO',
+                        'OTROS_INGRESOS': 'OTROS_INGRESOS',
+                        'OTROS_GASTOS': 'OTROS_GASTOS',
+                        'IMPUESTO_SOBRE_LA_RENTA': 'IMPUESTO_SOBRE_LA_RENTA',
+                    }
+                    
+                    bloque_er = mapeo_bloques.get(linea.clave)
+                    if bloque_er:
+                        cuentas_por_bloque = cuentas.filter(
+                            er_bloque=bloque_er
+                        ).values_list('id_cuenta', flat=True)
+                        cuentas_preseleccionadas.update(cuentas_por_bloque)
+                
+                self.fields[field_name] = forms.ModelMultipleChoiceField(
                     queryset=cuentas,
-                    widget=forms.Select(attrs={'class': 'form-select'}),
+                    widget=forms.CheckboxSelectMultiple(attrs={
+                        'class': 'form-check-input'
+                    }),
                     label=f"{linea.nombre} ({linea.get_estado_display()})",
                     required=False,
-                    empty_label="-- Seleccione una cuenta --"
+                    help_text=f"Selecciona todas las cuentas que componen {linea.nombre}"
                 )
                 
-                # Si ya existe un mapeo, establecer el valor inicial
-                try:
-                    mapeo = MapeoCuentaLinea.objects.filter(linea=linea).first()
-                    if mapeo and mapeo.cuenta.grupo.catalogo == catalogo:
-                        self.fields[field_name].initial = mapeo.cuenta
-                except:
-                    pass
+                # Establecer valores iniciales
+                if cuentas_preseleccionadas:
+                    self.fields[field_name].initial = list(cuentas_preseleccionadas)
 
 
 # Importar formularios desde el subdirectorio forms

@@ -75,19 +75,21 @@
             <div id="empresas-popup" class="empresas-popup-content p-2 rounded shadow-lg d-none">
                 <ul id="companies" class="list-unstyled small mb-0">
 
-                    <li class="d-flex justify-content-between align-items-center py-1 px-1">
-                        {% for empresa in USER_COMPANIES %}
-                            <li class="d-flex justify-content-between align-items-center py-1 px-1">
-                                 <a href="#" class="company-link text-decoration-none flex-grow-1">
-                                    {{ empresa.razon_social }}
-                                </a>
-                                <a href="{% url 'editar_empresa' nit=empresa.nit %}" class="btn btn-sm btn-edit-company">
-                                     <i data-lucide="square-pen"></i>
-                                </a>
-                            </li>
-                        {% empty %}
-                            <li class="py-1 px-1 text-muted">No hay empresas.</li>
-                        {% endfor %}
+                    {% for empresa in USER_COMPANIES %}
+                        <li class="d-flex justify-content-between align-items-center py-1 px-1">
+
+                            <a href="{% url 'set_active_company' empresa_nit=empresa.nit %}"
+                               class="company-link text-decoration-none flex-grow-1 {% if empresa.nit == active_company_nit %}fw-bold text-white{% endif %}">
+                                {{ empresa.razon_social }}
+                            </a>
+
+                            <a href="{% url 'editar_empresa' nit=empresa.nit %}" class="btn btn-sm btn-edit-company">
+                                <i data-lucide="square-pen"></i>
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li class="py-1 px-1 text-muted">No hay empresas.</li>
+                    {% endfor %}
 
                 </ul>
             </div>
@@ -98,7 +100,14 @@
             <div class="profile-menu-container position-relative"> <button class="btn btn-light w-100 text-start" id="btn-profile">
                     <i data-lucide="user" class="me-2"></i>
                 {% if request.user.is_authenticated %}
-                        {{ CURRENT_USER_NAME }}
+                    {% comment %} Intenta obtener el nombre completo {% endcomment %}
+                    {% if request.user.get_full_name %}
+                        {{ request.user.get_full_name }}
+
+                    {% comment %} Si no hay, muestra el nombre de usuario como fallback {% endcomment %}
+                    {% else %}
+                        {{ request.user.username }}
+                    {% endif %}
                     {% else %}
                         Invitado
                     {% endif %}
@@ -146,7 +155,7 @@
     clearTimeout(timeout);
     timeout = setTimeout(() => {
       document.getElementById('logout-form').submit();
-    }, 30000); // 30 segundos
+    }, 300000000); // 30 segundos
   }
 
   window.onload = resetTimer;

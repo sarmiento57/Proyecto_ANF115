@@ -1,10 +1,114 @@
 {% extends 'stela/base.html' %}
 {% load static %}
 {% load django_bootstrap5 %}
-{% block title %}Mapeo de Cuentas — Stela{% endblock %}
+{% load dict_extras %}
+{% block title %}Mapeo de Cuentas para Ratios — Stela{% endblock %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/style_dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/error-box.css' %}">
+<style>
+  .mapeo-section {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    background: #f8f9fa;
+  }
+  .mapeo-section.balance {
+    border-left: 4px solid #0d6efd;
+  }
+  .mapeo-section.resultados {
+    border-left: 4px solid #198754;
+  }
+  .linea-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #dee2e6;
+  }
+  .linea-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212529;
+  }
+  .linea-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  .badge-balance {
+    background-color: #cfe2ff;
+    color: #084298;
+  }
+  .badge-resultados {
+    background-color: #d1e7dd;
+    color: #0f5132;
+  }
+  .cuentas-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 1rem;
+    background: white;
+  }
+  .cuenta-item {
+    padding: 0.5rem;
+    margin-bottom: 0.25rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+  .cuenta-item:hover {
+    background-color: #f8f9fa;
+  }
+  .cuenta-item label {
+    margin-bottom: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+  .cuenta-label {
+    color: #495057;
+    flex: 1;
+  }
+  .cuenta-label::before {
+    content: '';
+    display: inline-block;
+    width: 0;
+  }
+  .mapeo-info {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+  }
+  .mapeo-automatico {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #198754;
+    font-weight: 500;
+  }
+  .resumen-mapeo {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .resumen-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .resumen-item:last-child {
+    border-bottom: none;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -12,39 +116,195 @@
   {% include 'partials/messages.html' %}
 
   <div class="row justify-content-center">
-    <div class="col-md-10 col-lg-8">
+    <div class="col-md-11 col-lg-10">
       <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
           <h4 class="mb-0">
-            <i data-lucide="link" class="me-2"></i>{{ titulo }}
+            <i data-lucide="link" class="me-2"></i>Mapeo de Cuentas para Ratios
           </h4>
-          <small class="text-white-50">Catálogo: {{ catalogo.empresa.razon_social }} - Año {{ catalogo.anio_catalogo }}</small>
+          <small class="text-white-50">Catálogo: {{ catalogo.empresa.razon_social }}</small>
         </div>
         <div class="card-body">
-          <div class="alert alert-warning">
-            <i data-lucide="alert-triangle" class="me-2"></i>
-            <strong>Importante:</strong> Mapea las cuentas del catálogo a las líneas de estado necesarias para calcular los ratios financieros.
+          <div class="alert alert-info mb-4">
+            <i data-lucide="info" class="me-2"></i>
+            <strong>Información:</strong> Esta interfaz permite mapear las cuentas necesarias para calcular los ratios esenciales del sistema. 
+            Las cuentas se pre-seleccionan automáticamente según su <code>ratio_tag</code>, <code>bg_bloque</code> y <code>er_bloque</code>.
+            Puedes ajustar los mapeos si es necesario.
           </div>
 
-          <form method="post">
+          <div class="alert alert-success mb-4">
+            <i data-lucide="check-circle" class="me-2"></i>
+            <strong>Ratios que se calcularán:</strong>
+            <ul class="mb-0 mt-2">
+              <li><strong>Liquidez Corriente:</strong> ACTIVO_CORRIENTE / PASIVO_CORRIENTE</li>
+              <li><strong>Endeudamiento:</strong> PASIVO_CORRIENTE / TOTAL_ACTIVO</li>
+              <li><strong>Margen Neto:</strong> UTILIDAD_NETA / VENTAS_NETAS</li>
+            </ul>
+          </div>
+
+          <form method="post" id="mapeo-form">
             {% csrf_token %}
             
-            <div class="row">
+            <!-- Resumen de mapeos -->
+            <div class="resumen-mapeo">
+              <h6 class="mb-3"><i data-lucide="bar-chart-2" class="me-2"></i>Resumen de Mapeos</h6>
               {% for field in form %}
-              <div class="col-md-6 mb-3">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                  <div class="text-danger small">{{ field.errors.0 }}</div>
+                {% if field.initial and "linea_UTILIDAD_NETA" not in field.name %}
+                  <div class="resumen-item">
+                    <span>{{ field.label }}</span>
+                    <span class="mapeo-automatico">
+                      <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i>
+                      {{ field.initial|length }} cuenta(s) pre-seleccionada(s)
+                    </span>
+                  </div>
                 {% endif %}
-              </div>
               {% endfor %}
+              <div class="resumen-item">
+                <span>Utilidad Neta (Resultados)</span>
+                <span class="badge bg-info">Calculado Automáticamente</span>
+              </div>
+            </div>
+
+            <!-- Sección Balance -->
+            <div class="mapeo-section balance">
+              <h5 class="mb-4">
+                <i data-lucide="file-text" class="me-2"></i>Balance General
+              </h5>
+              
+              {% for field in form %}
+                {% if "linea_TOTAL_ACTIVO" in field.name or "linea_ACTIVO_CORRIENTE" in field.name or "linea_PASIVO_CORRIENTE" in field.name %}
+                  <div class="mb-4">
+                    <div class="linea-header">
+                      <div>
+                        <span class="linea-title">{{ field.label|slice:":-12" }}</span>
+                        <span class="linea-badge badge-balance ms-2">Balance</span>
+                      </div>
+                      {% if field.initial %}
+                        <span class="badge bg-success">
+                          {{ field.initial|length }} mapeada(s)
+                        </span>
+                      {% else %}
+                        <span class="badge bg-warning">Sin mapear</span>
+                      {% endif %}
+                    </div>
+                    
+                    {% if field.help_text %}
+                      <p class="text-muted small mb-2">{{ field.help_text }}</p>
+                    {% endif %}
+                    
+                    <div class="cuentas-container">
+                      {% for choice in field %}
+                        {% with cuenta_id=choice.choice_value|stringformat:"s" %}
+                        {% with info=cuentas_info|get_item:cuenta_id %}
+                        <div class="cuenta-item" data-cuenta="{{ choice.choice_label }}">
+                          {{ choice.tag }}
+                          <label for="{{ choice.id_for_label }}" class="ms-2 d-flex align-items-start w-100">
+                            <div class="flex-grow-1">
+                              <span class="cuenta-label d-block">{{ choice.choice_label }}</span>
+                              {% if info %}
+                                <span class="text-muted small d-block mt-1">
+                                  <span class="badge bg-secondary me-1">{{ info.naturaleza }}</span>
+                                  <span class="text-muted">{{ info.grupo }}</span>
+                                </span>
+                              {% endif %}
+                            </div>
+                          </label>
+                        </div>
+                        {% endwith %}
+                        {% endwith %}
+                      {% endfor %}
+                    </div>
+                    
+                    {% if field.errors %}
+                      <div class="text-danger small mt-2">{{ field.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+
+            <!-- Sección Resultados -->
+            <div class="mapeo-section resultados">
+              <h5 class="mb-4">
+                <i data-lucide="trending-up" class="me-2"></i>Estado de Resultados
+              </h5>
+              
+              {% for field in form %}
+                {% if field.name|slice:":6" == "linea_" and "TOTAL_ACTIVO" not in field.name and "ACTIVO_CORRIENTE" not in field.name and "PASIVO_CORRIENTE" not in field.name %}
+                  <div class="mb-4">
+                    <div class="linea-header">
+                      <div>
+                        <span class="linea-title">{{ field.label|slice:":-12" }}</span>
+                        <span class="linea-badge badge-resultados ms-2">Resultados</span>
+                      </div>
+                      {% if field.initial %}
+                        <span class="badge bg-success">
+                          {{ field.initial|length }} mapeada(s)
+                        </span>
+                      {% else %}
+                        <span class="badge bg-warning">Sin mapear</span>
+                      {% endif %}
+                    </div>
+                    
+                    {% if field.help_text %}
+                      <p class="text-muted small mb-2">{{ field.help_text }}</p>
+                    {% endif %}
+                    
+                    <div class="cuentas-container">
+                      {% for choice in field %}
+                        {% with cuenta_id=choice.choice_value|stringformat:"s" %}
+                        {% with info=cuentas_info|get_item:cuenta_id %}
+                        <div class="cuenta-item" data-cuenta="{{ choice.choice_label }}">
+                          {{ choice.tag }}
+                          <label for="{{ choice.id_for_label }}" class="ms-2 d-flex align-items-start w-100">
+                            <div class="flex-grow-1">
+                              <span class="cuenta-label d-block">{{ choice.choice_label }}</span>
+                              {% if info %}
+                                <span class="text-muted small d-block mt-1">
+                                  <span class="badge bg-secondary me-1">{{ info.naturaleza }}</span>
+                                  <span class="text-muted">{{ info.grupo }}</span>
+                                </span>
+                              {% endif %}
+                            </div>
+                          </label>
+                        </div>
+                        {% endwith %}
+                        {% endwith %}
+                      {% endfor %}
+                    </div>
+                    
+                    {% if field.errors %}
+                      <div class="text-danger small mt-2">{{ field.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+              
+              <!-- Información sobre Utilidad Neta -->
+              <div class="mb-4">
+                <div class="linea-header">
+                  <div>
+                    <span class="linea-title">Utilidad Neta</span>
+                    <span class="linea-badge badge-resultados ms-2">Resultados</span>
+                  </div>
+                  <span class="badge bg-info">Calculado Automáticamente</span>
+                </div>
+                
+                <div class="alert alert-info mb-0">
+                  <i data-lucide="info" class="me-2"></i>
+                  <strong>Se calcula automáticamente</strong> desde los bloques consolidados: Ventas Netas, Costo Neto de Ventas, Gastos Operativos, Gasto Financiero, Otros Ingresos, Otros Gastos e Impuesto sobre la Renta. 
+                  Las cuentas ya están agrupadas según su <code>er_bloque</code>.
+                </div>
+              </div>
             </div>
 
             <div class="d-flex gap-2 mt-4">
               <button type="submit" class="btn btn-primary flex-fill">
                 <i data-lucide="save" class="me-2"></i>Guardar Mapeo
               </button>
+              <a href="{% url 'catalogo_mapeo' catalogo.id_catalogo %}?auto_mapear=1" class="btn btn-outline-primary">
+                <i data-lucide="refresh-cw" class="me-2"></i>Re-mapear Automáticamente
+              </a>
               <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
                 Cancelar
               </a>
@@ -60,6 +320,32 @@
 {% block scripts %}
 <script>
   lucide.createIcons();
+  
+  // Mejorar la visualización de checkboxes y formatear cuentas
+  document.querySelectorAll('.form-check-input').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const item = this.closest('.cuenta-item');
+      if (this.checked) {
+        item.style.backgroundColor = '#e7f3ff';
+      } else {
+        item.style.backgroundColor = '';
+      }
+    });
+    
+    // Aplicar estilo inicial si está marcado
+    if (checkbox.checked) {
+      checkbox.closest('.cuenta-item').style.backgroundColor = '#e7f3ff';
+    }
+  });
+  
+  // Formatear las etiquetas de cuentas (codigo - nombre)
+  document.querySelectorAll('.cuenta-label').forEach(label => {
+    const texto = label.textContent.trim();
+    if (texto.includes(' - ')) {
+      const [codigo, ...nombreParts] = texto.split(' - ');
+      const nombre = nombreParts.join(' - ');
+      label.innerHTML = `<span style="font-weight: 600; color: #495057; margin-right: 0.5rem; min-width: 80px; display: inline-block;">${codigo}</span><span style="color: #6c757d;">${nombre}</span>`;
+    }
+  });
 </script>
 {% endblock %}
-

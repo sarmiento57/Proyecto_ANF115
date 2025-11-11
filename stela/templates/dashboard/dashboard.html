@@ -15,19 +15,19 @@
   <div class="row g-3">
     <div class="col-12 col-md-4">
       <div class="card p-3 chart-card">
-        <h6>Gráfica: x</h6>
+        <h6>Gráfica de cuentas</h6>
         <canvas id="chart-x"></canvas>
       </div>
     </div>
     <div class="col-12 col-md-4">
       <div class="card p-3 chart-card">
-        <h6>Gráfica: x²</h6>
+        <h6>Gráfica de ratios</h6>
         <canvas id="chart-x2"></canvas>
       </div>
     </div>
     <div class="col-12 col-md-4">
       <div class="card p-3 chart-card">
-        <h6>Gráfica: x³</h6>
+        <h6>Gráfica de varias cuentas y ratios</h6>
         <canvas id="chart-x3"></canvas>
       </div>
     </div>
@@ -122,6 +122,22 @@
     {% endif %}
   </section>
 </div>
+
+    <div class="modal fade" id="chartOptionsModal" tabindex="-1" aria-labelledby="chartOptionsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="chartOptionsModalLabel">Seleccionar Opción</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="chartOptionsModalBody">
+            <p>Cargando...</p>
+          </div>
+          <div class="modal-footer" id="chartOptionsModalFooter">
+          </div>
+        </div>
+      </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
