@@ -21,8 +21,8 @@ class EmpresaForm(ModelForm):
             'razon_social': TextInput(attrs={'class': 'form-control', 'placeholder': 'Razón Social Completa'}),
             'direccion':TextInput(attrs={'class': 'form-control', 'maxlength':255, 'placeholder':'Departamento,Distrito,Municipio, etc.'}),
             'email': EmailInput(attrs={'class': 'form-control','placeholder': 'correo@dominio.com'}),
-            'telefono': TextInput(attrs={'class': 'form-control', 'maxlength': 8}),
-            'nit': TextInput(attrs={'class': 'form-control', 'maxlength': 14}),
+            'telefono': TextInput(attrs={'class': 'form-control', 'maxlength': 9}),
+            'nit': TextInput(attrs={'class': 'form-control', 'maxlength': 17}),
             'nrc': TextInput(attrs={'class': 'form-control', 'maxlength': 8}),
             'ciiu': Select(attrs={'class': 'form-select'}),
         }
