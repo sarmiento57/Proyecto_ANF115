@@ -33,6 +33,11 @@ urlpatterns = [
     path("catalogo/plantilla/excel/", views.descargar_plantilla_catalogo_excel, name="descargar_plantilla_catalogo_excel"),
     path("catalogo/plantilla/estados/csv/", views.descargar_plantilla_estados_csv, name="descargar_plantilla_estados_csv"),
     path("catalogo/plantilla/estados/excel/<int:catalogo_id>/", views.descargar_plantilla_estados_excel, name="descargar_plantilla_estados_excel"),
+    # Urls para analsis 
+    path("informes/vertical/", views.inf_vertical, name="inf_vertical"),
+    path("informes/horizontal/", views.inf_horizontal, name="inf_horizontal"),
+    path("informes/ratios/", views.inf_ratios, name="inf_ratios"),
+    path("informes/benchmark/", views.inf_benchmark, name="inf_benchmark"),
 
     # logout de usuario
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),

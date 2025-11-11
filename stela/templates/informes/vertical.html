@@ -1,0 +1,17 @@
+{% extends "stela/base.html" %}
+{% block content %}
+<h3>Análisis Vertical — {{ empresa.razon_social }} ({{ estado }}) {{ periodo.anio }}</h3>
+<table class="table table-sm">
+  <thead><tr><th>Clave</th><th>Nombre</th><th class="text-end">Monto</th><th class="text-end">% sobre base</th></tr></thead>
+  <tbody>
+    {% for f in filas %}
+    <tr>
+      <td>{{ f.clave }}</td>
+      <td>{{ f.nombre }}</td>
+      <td class="text-end">{{ f.monto|floatformat:2 }}</td>
+      <td class="text-end">{{ f.porc|floatformat:2 }}%</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
