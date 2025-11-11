@@ -19,6 +19,31 @@ def _replace_missing(expr):
 
 @transaction.atomic
 def calcular_y_guardar_ratios(empresa, periodo, tipo_estado='RES'):
+    """
+    Calcula y guarda todos los ratios financieros para una empresa y período.
+    
+    Flujo completo de cálculo de ratios:
+    1. BalanceDetalle: Saldos de cuentas del balance
+    2. MapeoCuentaLinea: Mapeo de cuentas a líneas de estado
+    3. LineaEstado: Agregación de valores por línea (ej: ACTIVO_CORRIENTE)
+    4. RatioDef: Fórmulas que usan claves de LineaEstado (ej: (ACTIVO_CORRIENTE)/(PASIVO_CORRIENTE))
+    5. ResultadoRatio: Almacenamiento del resultado calculado
+    
+    El proceso:
+    - Obtiene los valores de líneas de estado usando estado_dict()
+    - Para cada RatioDef, reemplaza las claves en la fórmula con los valores reales
+    - Evalúa la expresión matemática
+    - Si el ratio es porcentaje, multiplica por 100
+    - Guarda el resultado en ResultadoRatio
+    
+    Args:
+        empresa: Instancia de Empresa
+        periodo: Instancia de Periodo
+        tipo_estado: 'BAL' o 'RES' (por defecto 'RES')
+        
+    Returns:
+        list: Lista de diccionarios con {'clave': str, 'nombre': str, 'valor': Decimal}
+    """
     data = estado_dict(empresa, periodo, tipo_estado)
     cache = {k: v['monto'] for k,v in data.items()}
     resultados = []

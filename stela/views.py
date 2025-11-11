@@ -132,15 +132,70 @@ def crearEmpresa(request):
         form = EmpresaForm(request.POST)
 
         if form.is_valid():
-            empresa = form.save(commit=False)
-            empresa.usuario.add(request.user)
-            empresa.save()
-            return redirect('dashboard')
+            try:
+                empresa = form.save(commit=False)
+                empresa.save()  # Guardar primero para que tenga ID
+                empresa.usuario.add(request.user)  # Luego agregar usuario (ManyToMany)
+                messages.success(request, f'Empresa {empresa.razon_social} creada exitosamente.')
+                return redirect('dashboard')
+            except Exception as e:
+                messages.error(request, f'Error al crear la empresa: {str(e)}')
+                # Log del error para debugging
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f'Error al crear empresa: {e}', exc_info=True)
 
     context = {
         'form': form
     }
     return render(request, "stela/crear-empresa.html", context)
+
+@access_required('010', stay_on_page=True)
+def eliminar_balance(request, balance_id):
+    """
+    Vista para eliminar un estado financiero (Balance) y todos sus detalles.
+    También elimina los ratios calculados para ese período si ya no hay balances.
+    """
+    from stela.models.finanzas import Balance, BalanceDetalle, ResultadoRatio, Periodo
+    
+    balance = get_object_or_404(
+        Balance.objects.select_related('empresa', 'periodo'),
+        pk=balance_id,
+        empresa__usuario=request.user
+    )
+    
+    empresa = balance.empresa
+    periodo = balance.periodo
+    tipo_balance = balance.get_tipo_balance_display()
+    
+    if request.method == 'POST':
+        try:
+            # Eliminar el balance (esto eliminará automáticamente todos los BalanceDetalle por CASCADE)
+            balance.delete()
+            
+            # Verificar si el período ya no tiene balances
+            balances_restantes = Balance.objects.filter(periodo=periodo).count()
+            
+            # Si no quedan balances, eliminar también los ratios calculados para ese período
+            if balances_restantes == 0:
+                ResultadoRatio.objects.filter(empresa=empresa, periodo=periodo).delete()
+                messages.info(request, f'Se eliminaron también los ratios calculados para el período {periodo}.')
+            
+            messages.success(request, f'{tipo_balance} del período {periodo} eliminado correctamente.')
+            return redirect('empresa_detalles', empresa_nit=empresa.nit)
+        except Exception as e:
+            messages.error(request, f'Error al eliminar el estado financiero: {str(e)}')
+            return redirect('empresa_detalles', empresa_nit=empresa.nit)
+    
+    # GET: Mostrar confirmación
+    context = {
+        'balance': balance,
+        'empresa': empresa,
+        'periodo': periodo,
+        'tipo_balance': tipo_balance,
+        'num_detalles': balance.detalles.count()
+    }
+    return render(request, 'stela/balance/confirmar_eliminar.html', context)
 
 @access_required('042', stay_on_page=True)
 def editarEmpresa(request, nit):
@@ -541,6 +596,7 @@ def catalogo_upload_csv(request):
     """
     paso = request.GET.get('paso', '1')  # Por defecto paso 1 (Selecciona Empresa)
     empresa_nit_param = request.GET.get('empresa', '')  # Empresa desde parámetro URL
+    catalogo_id_param = request.GET.get('catalogo_id', '')  # Catálogo desde parámetro URL
     
     if request.method == 'POST':
         empresa_nit = request.POST.get('empresa')
@@ -812,12 +868,37 @@ def catalogo_upload_csv(request):
             
             if paso == '2':
                 # Paso 2: Solo catálogo (sin debe/haber)
-                if errores:
-                    messages.warning(request, f"Se procesaron {creados} cuentas, pero hubo {len(errores)} errores.")
+                # Verificar si es la primera vez que se carga el catálogo (no hay mapeos previos)
+                from stela.models.finanzas import MapeoCuentaLinea
+                mapeos_previos = MapeoCuentaLinea.objects.filter(
+                    cuenta__grupo__catalogo=catalogo
+                ).count()
+                
+                # Mapear automáticamente cuentas a líneas de estado basándose en ratio_tag
+                total_mapeadas = 0
+                try:
+                    from stela.services.mapeo_automatico import mapear_cuentas_por_bloques
+                    resumen_mapeo = mapear_cuentas_por_bloques(catalogo)
+                    total_mapeadas = sum(resumen_mapeo.values())
+                    if errores:
+                        messages.warning(request, f"Se procesaron {creados} cuentas, pero hubo {len(errores)} errores. {total_mapeadas} cuentas mapeadas automáticamente a líneas de estado.")
+                    else:
+                        messages.success(request, f"Catálogo cargado correctamente. {creados} cuentas procesadas y {total_mapeadas} cuentas mapeadas automáticamente a líneas de estado.")
+                except ValueError as e:
+                    # Si faltan líneas de estado, mostrar advertencia pero continuar
+                    messages.warning(request, f"Catálogo cargado correctamente. {creados} cuentas procesadas. Advertencia: {str(e)}")
+                except Exception as e:
+                    # Si hay otro error en el mapeo, registrar pero no bloquear
+                    messages.warning(request, f"Catálogo cargado correctamente. {creados} cuentas procesadas. Error en mapeo automático: {str(e)}")
+                
+                # Si es la primera vez (no había mapeos previos) y se crearon mapeos, mostrar paso 2.5
+                # Si ya había mapeos o no se crearon nuevos, ir directo a estados financieros
+                if mapeos_previos == 0 and total_mapeadas > 0:
+                    # Primera vez con mapeos creados: ir al paso de mapeo (paso 2.5)
+                    return redirect(f"{reverse('catalogo_upload')}?paso=2.5&empresa={empresa_nit}&catalogo_id={catalogo.id_catalogo}")
                 else:
-                    messages.success(request, f"Catálogo cargado correctamente. {creados} cuentas procesadas.")
-                # Redirigir al paso 3 con el catálogo_id
-                return redirect(f"{reverse('catalogo_upload')}?paso=3&empresa={empresa_nit}&catalogo_id={catalogo.id_catalogo}")
+                    # Ya tiene mapeos o no se crearon: ir directo a estados financieros
+                    return redirect(f"{reverse('catalogo_upload')}?paso=3&empresa={empresa_nit}&catalogo_id={catalogo.id_catalogo}")
             else:
                 # Paso 3: Estados financieros (con debe/haber)
                 if errores:
@@ -852,21 +933,31 @@ def catalogo_upload_csv(request):
         except Empresa.DoesNotExist:
             pass
     
-    # Si hay catálogo_id, obtener el catálogo para el paso 3
+    # Si hay catálogo_id, obtener el catálogo para el paso 3 o 2.5
     catalogo = None
-    if catalogo_id:
+    mapeos_existentes = 0
+    # Usar catalogo_id_param si catalogo_id está vacío
+    catalogo_id_final = catalogo_id or catalogo_id_param
+    if catalogo_id_final:
         try:
-            catalogo = Catalogo.objects.get(pk=catalogo_id, empresa__usuario=request.user)
-        except Catalogo.DoesNotExist:
+            catalogo = Catalogo.objects.get(pk=catalogo_id_final, empresa__usuario=request.user)
+            # Verificar si ya hay mapeos (para saber si mostrar paso 2.5)
+            from stela.models.finanzas import MapeoCuentaLinea
+            mapeos_existentes = MapeoCuentaLinea.objects.filter(
+                cuenta__grupo__catalogo=catalogo
+            ).count()
+        except (Catalogo.DoesNotExist, ValueError):
             pass
     
     context = {
         'empresas_usuario': empresas,
         'paso': paso,
         'empresa_nit': empresa_nit_param or request.GET.get('empresa', ''),
-        'catalogo_id': catalogo_id,
+        'catalogo_id': catalogo_id_final,
         'catalogo': catalogo,
-        'tiene_catalogo': catalogo is not None
+        'tiene_catalogo': catalogo is not None,
+        'tiene_mapeos': mapeos_existentes > 0,
+        'num_mapeos': mapeos_existentes
     }
     return render(request, 'stela/catalogo/upload.html', context)
 
@@ -907,45 +998,121 @@ def catalogo_mapeo_cuentas(request, catalogo_id):
     """
     Vista para mapear cuentas a líneas de estado (para ratios).
     Pestaña oculta, no aparece en el menú principal.
+    
+    Permite mapeo manual mediante formulario y re-mapeo automático basado en bloques.
     """
     catalogo = get_object_or_404(Catalogo, pk=catalogo_id, empresa__usuario=request.user)
+    
+    # Si se solicita re-mapeo automático (parámetro GET)
+    if request.GET.get('auto_mapear') == '1':
+        try:
+            from stela.services.mapeo_automatico import mapear_cuentas_por_bloques
+            resumen_mapeo = mapear_cuentas_por_bloques(catalogo)
+            total_mapeadas = sum(resumen_mapeo.values())
+            messages.success(request, f'Mapeo automático completado. {total_mapeadas} cuentas mapeadas a líneas de estado.')
+        except ValueError as e:
+            messages.error(request, f'Error en mapeo automático: {str(e)}')
+        except Exception as e:
+            messages.error(request, f'Error inesperado en mapeo automático: {str(e)}')
+        # Redirigir para recargar el formulario con los nuevos mapeos
+        return redirect(f"{reverse('catalogo_mapeo', args=[catalogo_id])}")
     
     if request.method == 'POST':
         form = MapeoCuentaForm(request.POST, catalogo=catalogo)
         if form.is_valid():
             from stela.models.finanzas import LineaEstado, MapeoCuentaLinea
             
-            # Procesar cada campo del formulario
-            for field_name, cuenta in form.cleaned_data.items():
-                if field_name.startswith('linea_') and cuenta:
+            # Procesar cada campo del formulario (ahora puede tener múltiples cuentas)
+            for field_name, cuentas_seleccionadas in form.cleaned_data.items():
+                if field_name.startswith('linea_') and cuentas_seleccionadas:
                     clave_linea = field_name.replace('linea_', '')
                     try:
                         linea = LineaEstado.objects.get(clave=clave_linea)
                         
-                        # Eliminar mapeos existentes para esta línea y cuenta
+                        # Eliminar TODOS los mapeos existentes para esta línea en este catálogo
                         MapeoCuentaLinea.objects.filter(
                             linea=linea,
                             cuenta__grupo__catalogo=catalogo
                         ).delete()
                         
-                        # Crear nuevo mapeo
-                        MapeoCuentaLinea.objects.create(
-                            cuenta=cuenta,
-                            linea=linea,
-                            signo=1
-                        )
+                        # Crear nuevos mapeos para cada cuenta seleccionada
+                        cuentas_mapeadas = 0
+                        for cuenta in cuentas_seleccionadas:
+                            # Para UTILIDAD_NETA, el signo se determina por la naturaleza de la cuenta
+                            # pero se aplicará correctamente en estado_dict
+                            signo = 1  # Por defecto positivo
+                            if clave_linea == 'UTILIDAD_NETA':
+                                # El signo se ajustará en estado_dict según naturaleza y bloque
+                                # Aquí solo guardamos 1, el cálculo real se hace en estado_dict
+                                signo = 1
+                            
+                            MapeoCuentaLinea.objects.create(
+                                cuenta=cuenta,
+                                linea=linea,
+                                signo=signo
+                            )
+                            cuentas_mapeadas += 1
+                        
+                        if cuentas_mapeadas > 0:
+                            messages.info(request, f'{linea.nombre}: {cuentas_mapeadas} cuenta(s) mapeada(s)')
                     except LineaEstado.DoesNotExist:
                         pass
             
             messages.success(request, 'Mapeo de cuentas guardado correctamente.')
             return redirect('dashboard')
     else:
+        # Si es la primera vez que se abre esta pantalla y no hay mapeos,
+        # ejecutar mapeo automático silenciosamente
+        from stela.models.finanzas import MapeoCuentaLinea
+        mapeos_existentes = MapeoCuentaLinea.objects.filter(
+            cuenta__grupo__catalogo=catalogo
+        ).count()
+        
+        if mapeos_existentes == 0:
+            # No hay mapeos, ejecutar automáticamente
+            try:
+                from stela.services.mapeo_automatico import mapear_cuentas_por_bloques
+                resumen_mapeo = mapear_cuentas_por_bloques(catalogo)
+                total_mapeadas = sum(resumen_mapeo.values())
+                if total_mapeadas > 0:
+                    messages.info(request, f'Mapeo automático ejecutado: {total_mapeadas} cuentas mapeadas según su ratio_tag.')
+            except Exception as e:
+                # Si falla el mapeo automático, continuar sin error
+                pass
+        
         form = MapeoCuentaForm(catalogo=catalogo)
+    
+    # Ejecutar mapeo automático si se solicita
+    if request.GET.get('auto_mapear') == '1':
+        try:
+            from stela.services.mapeo_automatico import mapear_cuentas_por_bloques
+            resumen_mapeo = mapear_cuentas_por_bloques(catalogo)
+            total_mapeadas = sum(resumen_mapeo.values())
+            if total_mapeadas > 0:
+                messages.success(request, f'Mapeo automático ejecutado: {total_mapeadas} cuentas mapeadas según su ratio_tag, bg_bloque y er_bloque.')
+                # Recargar el formulario con los nuevos mapeos
+                form = MapeoCuentaForm(catalogo=catalogo)
+        except Exception as e:
+            messages.error(request, f'Error al ejecutar mapeo automático: {str(e)}')
+    
+    # Preparar información adicional de cuentas para el template
+    # Crear un diccionario con información de grupo y naturaleza para cada cuenta
+    cuentas_info = {}
+    if catalogo:
+        from stela.models.catalogo import Cuenta
+        cuentas = Cuenta.objects.filter(grupo__catalogo=catalogo).select_related('grupo')
+        for cuenta in cuentas:
+            # Usar str(id_cuenta) como clave porque los valores del formulario son strings
+            cuentas_info[str(cuenta.id_cuenta)] = {
+                'grupo': cuenta.grupo.nombre,
+                'naturaleza': cuenta.grupo.get_naturaleza_display() if hasattr(cuenta.grupo, 'get_naturaleza_display') else cuenta.grupo.naturaleza
+            }
     
     context = {
         'form': form,
         'catalogo': catalogo,
-        'titulo': 'Mapeo de Cuentas para Ratios'
+        'titulo': 'Mapeo de Cuentas para Ratios',
+        'cuentas_info': cuentas_info
     }
     return render(request, 'stela/catalogo/mapeo_cuentas.html', context)
 

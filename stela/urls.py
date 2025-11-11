@@ -25,6 +25,9 @@ urlpatterns = [
     path("catalogo/create/", views.catalogo_create_manual, name="catalogo_create_manual"),
     path("catalogo/mapeo/<int:catalogo_id>/", views.catalogo_mapeo_cuentas, name="catalogo_mapeo"),
     
+    # URLs para eliminar estados financieros
+    path("balance/eliminar/<int:balance_id>/", views.eliminar_balance, name="eliminar_balance"),
+    
     # URLs para descargar plantillas
     path("catalogo/plantilla/csv/", views.descargar_plantilla_catalogo_csv, name="descargar_plantilla_catalogo_csv"),
     path("catalogo/plantilla/excel/", views.descargar_plantilla_catalogo_excel, name="descargar_plantilla_catalogo_excel"),

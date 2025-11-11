@@ -100,7 +100,16 @@
             <div class="row">
               <!-- Balance General -->
               <div class="col-12 col-md-6 balance-section">
-                <h6 class="text-primary mb-3">Balance General</h6>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="text-primary mb-0">Balance General</h6>
+                  {% if balances.balance %}
+                    <a href="{% url 'eliminar_balance' balances.balance.id_balance %}" 
+                       class="btn btn-sm btn-outline-danger"
+                       onclick="return confirm('¿Estás seguro de eliminar el Balance General de este período? Esta acción no se puede deshacer.');">
+                      <i data-lucide="trash-2" class="me-1"></i>Eliminar
+                    </a>
+                  {% endif %}
+                </div>
                 {% if balances.balance %}
                   {% with balance=balances.balance %}
                     <div class="table-responsive">
@@ -136,7 +145,16 @@
 
               <!-- Estado de Resultados -->
               <div class="col-12 col-md-6 balance-section">
-                <h6 class="text-success mb-3">Estado de Resultados</h6>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="text-success mb-0">Estado de Resultados</h6>
+                  {% if balances.resultados %}
+                    <a href="{% url 'eliminar_balance' balances.resultados.id_balance %}" 
+                       class="btn btn-sm btn-outline-danger"
+                       onclick="return confirm('¿Estás seguro de eliminar el Estado de Resultados de este período? Esta acción no se puede deshacer.');">
+                      <i data-lucide="trash-2" class="me-1"></i>Eliminar
+                    </a>
+                  {% endif %}
+                </div>
                 {% if balances.resultados %}
                   {% with balance=balances.resultados %}
                     <div class="table-responsive">

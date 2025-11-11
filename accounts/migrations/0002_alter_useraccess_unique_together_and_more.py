@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('accounts', '0001_initial'),
-        ('stela', '0003_remove_empresa_usuario_empresa_usuario'),
+        ('stela', '0004_remove_empresa_usuario_empresa_usuario'),
     ]
 
     operations = [

@@ -1,0 +1,67 @@
+{% extends 'stela/base.html' %}
+{% load static %}
+{% block title %}Eliminar Estado Financiero — Stela{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/style_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white">
+          <h4 class="mb-0">
+            <i data-lucide="alert-triangle" class="me-2"></i>Confirmar Eliminación
+          </h4>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning">
+            <i data-lucide="alert-circle" class="me-2"></i>
+            <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+          </div>
+
+          <p class="mb-3">¿Estás seguro de que deseas eliminar el siguiente estado financiero?</p>
+
+          <div class="card bg-light mb-3">
+            <div class="card-body">
+              <p class="mb-1"><strong>Empresa:</strong> {{ empresa.razon_social }}</p>
+              <p class="mb-1"><strong>Período:</strong> {{ periodo.anio }}{% if periodo.mes %}/{{ periodo.mes|stringformat:"02d" }}{% endif %}</p>
+              <p class="mb-1"><strong>Tipo:</strong> {{ tipo_balance }}</p>
+              <p class="mb-0"><strong>Cuentas:</strong> {{ num_detalles }} cuenta(s)</p>
+            </div>
+          </div>
+
+          <div class="alert alert-info">
+            <i data-lucide="info" class="me-2"></i>
+            <small>
+              Se eliminarán todos los detalles de este estado financiero.
+              {% if num_detalles == 0 %}
+                Si este es el último estado financiero del período, también se eliminarán los ratios calculados.
+              {% endif %}
+            </small>
+          </div>
+
+          <form method="post" class="d-flex gap-2">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger flex-fill">
+              <i data-lucide="trash-2" class="me-2"></i>Sí, eliminar
+            </button>
+            <a href="{% url 'empresa_detalles' empresa.nit %}" class="btn btn-outline-secondary">
+              Cancelar
+            </a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  lucide.createIcons();
+</script>
+{% endblock %}
+

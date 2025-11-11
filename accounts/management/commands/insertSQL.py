@@ -25,18 +25,32 @@ class Command(BaseCommand):
                 cursor.execute("PRAGMA foreign_keys = OFF;")
 
                 # Ejecutar cada sentencia individualmente
+                insertados = 0
+                errores = 0
                 for statement in sql.split(';'):
                     stmt = statement.strip()
-                    if stmt:
+                    # Ignorar comentarios y líneas vacías
+                    if stmt and not stmt.startswith('--'):
                         try:
+                            # Reemplazar INSERT INTO con INSERT OR IGNORE INTO para evitar duplicados
+                            if stmt.upper().startswith('INSERT INTO'):
+                                stmt = stmt.replace('INSERT INTO', 'INSERT OR IGNORE INTO', 1)
                             cursor.execute(stmt)
+                            if cursor.rowcount > 0:
+                                insertados += cursor.rowcount
                         except Exception as e:
-                            self.stdout.write(self.style.ERROR(f"Error en sentencia: {stmt}\n→ {e}"))
+                            # Solo mostrar errores que no sean de duplicados
+                            if 'UNIQUE constraint' not in str(e) and 'duplicate' not in str(e).lower():
+                                self.stdout.write(self.style.WARNING(f"Advertencia en sentencia: {str(e)[:100]}"))
+                            errores += 1
 
                 # Reactivar las claves foráneas
                 cursor.execute("PRAGMA foreign_keys = ON;")
 
-            self.stdout.write(self.style.SUCCESS("Datos insertados correctamente desde el archivo SQL."))
+            if insertados > 0:
+                self.stdout.write(self.style.SUCCESS(f"Datos insertados: {insertados} registros. Errores ignorados (duplicados): {errores}"))
+            else:
+                self.stdout.write(self.style.WARNING(f"No se insertaron nuevos registros (posiblemente ya existen). Errores ignorados: {errores}"))
 
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Error al ejecutar el script SQL: {e}"))

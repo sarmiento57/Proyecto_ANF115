@@ -1,5 +1,7 @@
-from django.forms import ModelForm,TextInput, EmailInput, NumberInput
+from django import forms
+from django.forms import ModelForm,TextInput, EmailInput, NumberInput, Select
 from stela.models import Empresa
+from stela.models.ciiu import Ciiu
 
 class EmpresaForm(ModelForm):
     class Meta:
@@ -22,8 +24,21 @@ class EmpresaForm(ModelForm):
             'telefono': TextInput(attrs={'class': 'form-control', 'maxlength': 8}),
             'nit': TextInput(attrs={'class': 'form-control', 'maxlength': 14}),
             'nrc': TextInput(attrs={'class': 'form-control', 'maxlength': 8}),
-
+            'ciiu': Select(attrs={'class': 'form-select'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Asegurar que el queryset de ciiu esté disponible
+        self.fields['ciiu'].queryset = Ciiu.objects.all().order_by('codigo')
+        self.fields['ciiu'].empty_label = "--- Seleccione un código CIIU ---"
+        self.fields['ciiu'].required = True
+    
+    def clean_ciiu(self):
+        ciiu = self.cleaned_data.get('ciiu')
+        if not ciiu:
+            raise forms.ValidationError('El código CIIU es obligatorio')
+        return ciiu
 
 
 class EmpresaEditForm(ModelForm):
