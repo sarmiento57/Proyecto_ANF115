@@ -4,7 +4,7 @@ from stela.models.finanzas import ResultadoRatio, RatioDef
 
 def benchmarking_por_ciiu(ciiu, periodo):
     ratios = RatioDef.objects.all()
-    empresas_ids = list(ciiu.empresa_set.values_list('pk', flat=True))
+    empresas_ids = list(ciiu.empresas_asociadas.values_list('pk', flat=True))
     out = {}
     for r in ratios:
         vals = list(ResultadoRatio.objects

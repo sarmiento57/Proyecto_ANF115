@@ -1,0 +1,15 @@
+{
+  "0111": {
+    "LIQUIDEZ_CORRIENTE": 1.5,
+    "ENDEUDAMIENTO": 0.6,
+    "MARGEN_NETO": 0.15,
+    "ROA": 0.10,
+    "ROE": 0.20,
+    "ROTACION_ACTIVOS": 1.2,
+    "APALANCAMIENTO": 2.0,
+    "CAPITAL_TRABAJO": 0.0,
+    "RAZON_ACTIVOS_CORRIENTES": 0.5,
+    "RAZON_PATRIMONIO": 0.4
+  }
+}
+

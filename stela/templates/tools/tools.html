@@ -83,7 +83,14 @@
 
   <!-- Sección: Ratios y Benchmark -->
   <div class="card mb-4">
-    <div class="card-header">Ratios (empresa) y Benchmark sector (CIIU)</div>
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Ratios (empresa) y Benchmark sector (CIIU)</span>
+      {% if empresa and puede_ver_graficas %}
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#ratiosGraficasModal" onclick="cargarGraficasRatios('{{ empresa.nit }}')">
+          Ver Gráficas
+        </button>
+      {% endif %}
+    </div>
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-striped table-bordered table-sm m-0">
@@ -115,6 +122,45 @@
       </div>
     </div>
   </div>
+
+  <!-- Sección: Comparación con Parámetros de Sector -->
+  {% if ratios_sector %}
+  <div class="card mb-4">
+    <div class="card-header">Comparación con Ratios Digitados por Sector</div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm m-0">
+          <thead class="table-light">
+            <tr>
+              <th>Ratio</th>
+              <th class="text-end">Valor empresa</th>
+              <th class="text-end">Parámetro sector</th>
+              <th class="text-center">Cumplimiento</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in ratios_sector %}
+              <tr>
+                <td>{{ r.nombre }}</td>
+                <td class="text-end">{% if r.valor is not None %}{{ r.valor|floatformat:2 }}{% else %}—{% endif %}</td>
+                <td class="text-end">{% if r.valor_sector is not None %}{{ r.valor_sector|floatformat:2 }}{% else %}—{% endif %}</td>
+                <td class="text-center">
+                  {% if r.semaforo_sector == 'CUMPLE' %}
+                    <span class="badge bg-success">CUMPLE</span>
+                  {% elif r.semaforo_sector == 'NO_CUMPLE' %}
+                    <span class="badge bg-danger">NO CUMPLE</span>
+                  {% else %}
+                    <span class="badge bg-secondary">N/A</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   <!-- Sección: Análisis Vertical Estado de Resultados -->
   <div class="card mb-4">
@@ -379,5 +425,135 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarPeriodos(initialEmpresa, initialPerBase, initialPerAct);
   }
 });
+</script>
+
+<!-- Modal para Gráficas de Ratios -->
+<div class="modal fade" id="ratiosGraficasModal" tabindex="-1" aria-labelledby="ratiosGraficasModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ratiosGraficasModalLabel">Gráficas de Ratios - Evolución Temporal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="ratios-charts-container" class="row row-cols-1 row-cols-md-2 g-3">
+          <div class="col-12 text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Cargando gráficas...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// Función para cargar y renderizar gráficas de ratios
+async function cargarGraficasRatios(empresaNit) {
+  const container = document.getElementById('ratios-charts-container');
+  container.innerHTML = '<div class="col-12 text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando gráficas...</span></div></div>';
+  
+  try {
+    // Validar que haya al menos 3 períodos
+    const validationUrl = `{% url 'ratios_graficas_modal' %}?empresa=${empresaNit}`;
+    const validationResponse = await fetch(validationUrl);
+    const validationData = await validationResponse.json();
+    
+    if (!validationResponse.ok) {
+      container.innerHTML = `<div class="col-12"><div class="alert alert-warning">${validationData.error || 'Error al validar datos'}</div></div>`;
+      return;
+    }
+    
+    // Obtener datos de ratios
+    const ratiosClaves = validationData.ratios.map(r => r.clave).join(',');
+    const dataUrl = `{% url 'ratios_series_json' %}?empresa=${empresaNit}&claves=${ratiosClaves}`;
+    const dataResponse = await fetch(dataUrl);
+    const data = await dataResponse.json();
+    
+    if (!dataResponse.ok) {
+      container.innerHTML = `<div class="col-12"><div class="alert alert-danger">${data.error || 'Error al cargar datos'}</div></div>`;
+      return;
+    }
+    
+    // Limpiar contenedor
+    container.innerHTML = '';
+    
+    // Crear una gráfica por cada ratio
+    Object.entries(data.series).forEach(([clave, info]) => {
+      const col = document.createElement('div');
+      col.className = 'col';
+      
+      const card = document.createElement('div');
+      card.className = 'card shadow-sm';
+      
+      const cardBody = document.createElement('div');
+      cardBody.className = 'card-body';
+      
+      const title = document.createElement('h6');
+      title.className = 'card-title';
+      title.textContent = info.nombre;
+      cardBody.appendChild(title);
+      
+      const canvas = document.createElement('canvas');
+      cardBody.appendChild(canvas);
+      card.appendChild(cardBody);
+      col.appendChild(card);
+      container.appendChild(col);
+      
+      // Filtrar valores None
+      const valoresFiltrados = info.valores.map((v, i) => v !== null ? {x: i, y: v} : null).filter(v => v !== null);
+      const labelsFiltrados = data.anios.filter((_, i) => info.valores[i] !== null);
+      
+      // Crear gráfica
+      new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: data.anios,
+          datasets: [{
+            label: info.nombre,
+            data: info.valores,
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1,
+            spanGaps: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false
+            }
+          }
+        }
+      });
+    });
+    
+    if (container.children.length === 0) {
+      container.innerHTML = '<div class="col-12"><div class="alert alert-info">No hay datos suficientes para generar gráficas.</div></div>';
+    }
+    
+  } catch (error) {
+    console.error('Error al cargar gráficas:', error);
+    container.innerHTML = `<div class="col-12"><div class="alert alert-danger">Error al cargar las gráficas: ${error.message}</div></div>`;
+  }
+}
 </script>
 {% endblock content %}

@@ -18,6 +18,7 @@ from stela.models.catalogo import Catalogo, GrupoCuenta, Cuenta
 from stela.services.analisis import analisis_vertical, analisis_horizontal
 from stela.services.ratios import calcular_y_guardar_ratios
 from stela.services.benchmark import benchmarking_por_ciiu, etiqueta_semaforo
+from stela.services.ratios_sector import obtener_comparacion_sector
 from stela.services.estados import recalcular_saldos_detalle
 from stela.services.plantillas import (
     generar_plantilla_catalogo_csv,
@@ -102,8 +103,26 @@ def empresa_detalles(request, empresa_nit):
     if catalogo:
         cuentas = Cuenta.objects.filter(grupo__catalogo=catalogo).select_related('grupo').order_by('codigo')
     
-    # Obtener períodos y balances
-    periodos = Periodo.objects.filter(empresa=empresa).order_by('-anio', '-mes')
+    # Obtener períodos que tienen al menos un balance
+    periodos = Periodo.objects.filter(
+        empresa=empresa,
+        balance__isnull=False
+    ).distinct().order_by('-anio', '-mes')
+    
+    # Eliminar períodos vacíos (sin balances)
+    periodos_vacios = Periodo.objects.filter(empresa=empresa).exclude(
+        id_periodo__in=periodos.values_list('id_periodo', flat=True)
+    )
+    
+    if periodos_vacios.exists():
+        # Guardar el conteo antes de eliminar
+        num_periodos_vacios = periodos_vacios.count()
+        # Eliminar ratios calculados para períodos vacíos primero
+        from stela.models.finanzas import ResultadoRatio
+        ResultadoRatio.objects.filter(periodo__in=periodos_vacios).delete()
+        # Eliminar los períodos vacíos
+        periodos_vacios.delete()
+        messages.info(request, f'Se eliminaron {num_periodos_vacios} período(s) vacío(s) sin estados financieros.')
     
     # Agrupar balances por período
     balances_por_periodo = {}
@@ -290,15 +309,29 @@ def tools_finanzas(request):
 
     # Benchmark por CIIU
     ratios_bench = []
-    if getattr(empresa, 'idCiiu_id', None):
-        bench = benchmarking_por_ciiu(empresa.idCiiu, p_act)
-        for r in ratios:
-            b = bench.get(r['clave'])
-            if b:
-                sem = etiqueta_semaforo(r['valor'], b['promedio'], b['desv'])
-                ratios_bench.append({**r, **b, 'semaforo': sem})
-            else:
-                ratios_bench.append({**r, 'promedio': None, 'desv': None, 'semaforo': 'NA'})
+    if getattr(empresa, 'idCiiu_id', None) or getattr(empresa, 'ciiu', None):
+        ciiu_obj = getattr(empresa, 'ciiu', None) or getattr(empresa, 'idCiiu', None)
+        if ciiu_obj:
+            bench = benchmarking_por_ciiu(ciiu_obj, p_act)
+            for r in ratios:
+                b = bench.get(r['clave'])
+                if b:
+                    sem = etiqueta_semaforo(r['valor'], b['promedio'], b['desv'])
+                    ratios_bench.append({**r, **b, 'semaforo': sem})
+                else:
+                    ratios_bench.append({**r, 'promedio': None, 'desv': None, 'semaforo': 'NA'})
+
+    # Comparación con parámetros de sector (ratios digitados)
+    ratios_sector = []
+    if empresa.ciiu:
+        ratios_sector = obtener_comparacion_sector(empresa, ratios)
+    
+    # Contar períodos con ratios para validar botón de gráficas
+    periodos_con_ratios = Periodo.objects.filter(
+        empresa=empresa,
+        resultadoratio__isnull=False
+    ).distinct().count()
+    puede_ver_graficas = periodos_con_ratios >= 3
 
     ctx.update({
         'empresa': empresa,
@@ -314,6 +347,9 @@ def tools_finanzas(request):
         'horizontal_rows_bal': horizontal_rows_bal,
         # Ratios
         'ratios_rows': ratios_bench or ratios,
+        'ratios_sector': ratios_sector,
+        'puede_ver_graficas': puede_ver_graficas,
+        'periodos_con_ratios': periodos_con_ratios,
     })
     return render(request, "tools/tools.html", ctx)
 
@@ -1453,6 +1489,139 @@ def get_periodos_api(request):
             })
         
         return JsonResponse({'periodos': periodos_data}, safe=False)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def ratios_series_json(request):
+    """
+    API que devuelve datos de ratios para múltiples períodos de una empresa.
+    Usado para generar gráficas de evolución temporal.
+    """
+    try:
+        empresa_nit = request.GET.get('empresa')
+        ratio_claves = request.GET.get('claves', '').split(',')
+        ratio_claves = [c.strip() for c in ratio_claves if c.strip()]
+        
+        if not empresa_nit:
+            return JsonResponse({'error': 'Falta parámetro empresa'}, status=400)
+        
+        # Validar acceso a la empresa
+        empresa = get_object_or_404(
+            Empresa.objects.filter(usuario=request.user),
+            nit=empresa_nit
+        )
+        
+        # Obtener todos los períodos de la empresa ordenados
+        periodos = Periodo.objects.filter(empresa=empresa).order_by('anio', 'mes')
+        
+        if not periodos.exists():
+            return JsonResponse({'anios': [], 'series': {}})
+        
+        # Crear labels para los períodos
+        anios = []
+        for p in periodos:
+            if p.mes:
+                anios.append(f"{p.anio}-{p.mes:02d}")
+            else:
+                anios.append(str(p.anio))
+        
+        # Si no se especifican ratios, usar los 5 predefinidos
+        if not ratio_claves:
+            ratio_claves = [
+                'LIQUIDEZ_CORRIENTE',
+                'ENDEUDAMIENTO',
+                'MARGEN_NETO',
+                'ROA',
+                'ROE'
+            ]
+        
+        # Obtener datos de cada ratio
+        series = {}
+        for ratio_clave in ratio_claves:
+            try:
+                ratio_def = RatioDef.objects.get(clave=ratio_clave)
+                valores = []
+                for p in periodos:
+                    r_res = ResultadoRatio.objects.filter(
+                        empresa=empresa,
+                        periodo=p,
+                        ratio=ratio_def
+                    ).first()
+                    if r_res and r_res.valor is not None:
+                        valores.append(float(r_res.valor))
+                    else:
+                        valores.append(None)
+                
+                series[ratio_clave] = {
+                    'nombre': ratio_def.nombre,
+                    'valores': valores
+                }
+            except RatioDef.DoesNotExist:
+                continue
+        
+        return JsonResponse({
+            'anios': anios,
+            'series': series
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@access_required('040', stay_on_page=True)
+def ratios_graficas_modal(request):
+    """
+    Vista que valida y devuelve datos para el modal de gráficas de ratios.
+    Valida que la empresa tenga al menos 3 períodos con ratios calculados.
+    """
+    try:
+        empresa_nit = request.GET.get('empresa')
+        if not empresa_nit:
+            return JsonResponse({'error': 'Falta parámetro empresa'}, status=400)
+        
+        empresa = get_object_or_404(
+            Empresa.objects.filter(usuario=request.user),
+            nit=empresa_nit
+        )
+        
+        # Contar períodos con ratios calculados
+        periodos_con_ratios = Periodo.objects.filter(
+            empresa=empresa,
+            resultadoratio__isnull=False
+        ).distinct().count()
+        
+        if periodos_con_ratios < 3:
+            return JsonResponse({
+                'error': f'Se requieren al menos 3 períodos con ratios calculados. Actualmente hay {periodos_con_ratios} períodos.'
+            }, status=400)
+        
+        # Obtener los 5 ratios predefinidos
+        ratios_claves = [
+            'LIQUIDEZ_CORRIENTE',
+            'ENDEUDAMIENTO',
+            'MARGEN_NETO',
+            'ROA',
+            'ROE'
+        ]
+        
+        ratios_info = []
+        for clave in ratios_claves:
+            try:
+                ratio_def = RatioDef.objects.get(clave=clave)
+                ratios_info.append({
+                    'clave': clave,
+                    'nombre': ratio_def.nombre
+                })
+            except RatioDef.DoesNotExist:
+                continue
+        
+        return JsonResponse({
+            'empresa_nit': empresa_nit,
+            'empresa_nombre': empresa.razon_social,
+            'ratios': ratios_info,
+            'periodos_count': periodos_con_ratios
+        })
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
