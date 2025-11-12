@@ -219,36 +219,73 @@ def editarEmpresa(request, nit):
 
 @access_required('005')
 def tools(request):
-    return render(request,'tools/tools.html')
+    """Vista inicial de herramientas - redirige a tools_finanzas"""
+    user = request.user
+    # Obtener empresas disponibles para el usuario (igual que en dashboard)
+    empresas = Empresa.objects.filter(usuario=user).distinct().order_by('razon_social')
+    ctx = {
+        'estado': 'RES',
+        'empresas': empresas,
+        'tiene_empresas': empresas.exists(),
+    }
+    return render(request, 'tools/tools.html', ctx)
 
 @access_required('040', stay_on_page=True)
 def tools_finanzas(request):
-    # parámetros: ?nit=...&per_base=ID&periodo&per_act=ID&periodo&estado=RES|BAL
+    # parámetros: ?nit=...&per_base=ID&per_act=ID
+    # Ahora calcula ambos tipos de estado simultáneamente
+    user = request.user
     nit = request.GET.get('nit')
-    estado = request.GET.get('estado', 'RES')
     per_base_id = request.GET.get('per_base')
     per_act_id  = request.GET.get('per_act')
 
-    ctx = {'estado': estado}
+    # Obtener empresas disponibles para el usuario (igual que en dashboard)
+    empresas = Empresa.objects.filter(usuario=user).distinct().order_by('razon_social')
+
+    ctx = {
+        'empresas': empresas,
+        'tiene_empresas': empresas.exists(),
+    }
+    
     if not (nit and per_act_id):
         messages.info(request, "Selecciona empresa y período para calcular.")
         return render(request, "tools/tools.html", ctx)
 
     # se cambio por el nuevo campo many to many
-    empresa = get_object_or_404(Empresa.objects.filter(usuario=request.user), pk=nit)
+    empresa = get_object_or_404(Empresa.objects.filter(usuario=request.user), nit=nit)
     p_act   = get_object_or_404(Periodo, pk=per_act_id)
 
-    # Ratios + vertical del período actual
-    ratios = calcular_y_guardar_ratios(empresa, p_act, tipo_estado=estado)
-    vertical_act = analisis_vertical(empresa, p_act, estado)
+    # Calcular ratios usando ambos tipos de estado
+    ratios_bal = calcular_y_guardar_ratios(empresa, p_act, tipo_estado='BAL')
+    ratios_res = calcular_y_guardar_ratios(empresa, p_act, tipo_estado='RES')
+    # Combinar ratios (evitar duplicados)
+    ratios_dict = {}
+    for r in ratios_bal + ratios_res:
+        if r['clave'] not in ratios_dict:
+            ratios_dict[r['clave']] = r
+        elif r['valor'] is not None:
+            ratios_dict[r['clave']] = r
+    ratios = list(ratios_dict.values())
+
+    # Análisis Vertical - Estado de Resultados
+    vertical_act_res = analisis_vertical(empresa, p_act, 'RES')
+    vertical_base_res = []
+    horizontal_rows_res = []
+    
+    # Análisis Vertical - Balance General
+    vertical_act_bal = analisis_vertical(empresa, p_act, 'BAL')
+    vertical_base_bal = []
+    horizontal_rows_bal = []
 
     # Horizontal si hay base
-    horizontal_rows = []
-    vertical_base = []
     if per_base_id:
         p_base = get_object_or_404(Periodo, pk=per_base_id)
-        horizontal_rows = analisis_horizontal(empresa, p_base, p_act, estado)
-        vertical_base = analisis_vertical(empresa, p_base, estado)
+        # Estado de Resultados
+        horizontal_rows_res = analisis_horizontal(empresa, p_base, p_act, 'RES')
+        vertical_base_res = analisis_vertical(empresa, p_base, 'RES')
+        # Balance General
+        horizontal_rows_bal = analisis_horizontal(empresa, p_base, p_act, 'BAL')
+        vertical_base_bal = analisis_vertical(empresa, p_base, 'BAL')
 
     # Benchmark por CIIU
     ratios_bench = []
@@ -266,9 +303,15 @@ def tools_finanzas(request):
         'empresa': empresa,
         'per_act': p_act,
         'per_base_id': per_base_id,
-        'vertical_act': vertical_act,
-        'vertical_base': vertical_base,
-        'horizontal_rows': horizontal_rows,
+        # Estado de Resultados
+        'vertical_act_res': vertical_act_res,
+        'vertical_base_res': vertical_base_res,
+        'horizontal_rows_res': horizontal_rows_res,
+        # Balance General
+        'vertical_act_bal': vertical_act_bal,
+        'vertical_base_bal': vertical_base_bal,
+        'horizontal_rows_bal': horizontal_rows_bal,
+        # Ratios
         'ratios_rows': ratios_bench or ratios,
     })
     return render(request, "tools/tools.html", ctx)
@@ -664,11 +707,70 @@ def catalogo_upload_csv(request):
                     # Leer hoja BalanceGeneral
                     if 'BalanceGeneral' in wb.sheetnames:
                         ws_balance = wb['BalanceGeneral']
-                        for row in ws_balance.iter_rows(min_row=3, values_only=True):  # Empezar desde fila 3 (después de encabezados)
-                            # Saltar filas vacías o que sean títulos de bloque
+                        # Empezar desde fila 4 (fila 1: leyenda, fila 2: títulos, fila 3: encabezados, fila 4+: datos)
+                        # Leer hasta el final de la hoja (sin límite máximo de filas)
+                        max_row = ws_balance.max_row
+                        for row in ws_balance.iter_rows(min_row=4, max_row=max_row, values_only=True):
+                            # Leer columna izquierda (Activos): columnas 0-3 (Código, Nombre, Debe, Haber)
+                            if len(row) > 1 and row[0] and row[1]:
+                                try:
+                                    codigo = str(row[0]).strip()
+                                    # Saltar si es un título de bloque, subtotal o no tiene código numérico
+                                    if codigo and not codigo.startswith('Total') and codigo[0].isdigit():
+                                        filas.append({
+                                            'codigo': codigo,
+                                            'nombre': str(row[1]).strip() if row[1] else '',
+                                            'grupo': '',  # Se obtendrá del catálogo
+                                            'naturaleza': '',  # Se obtendrá del catálogo
+                                            'tipo_estado': 'BAL',
+                                            'debe': str(row[2]) if len(row) > 2 and row[2] is not None else '0',
+                                            'haber': str(row[3]) if len(row) > 3 and row[3] is not None else '0'
+                                        })
+                                except Exception as e:
+                                    # Log del error para debugging si es necesario
+                                    pass
+                            
+                            # Leer columna derecha (Pasivos y Patrimonio): columnas 4-7 (Código, Nombre, Debe, Haber)
+                            # En la plantilla, las columnas son: 5=Código, 6=Nombre, 7=Debe, 8=Haber (índices 4,5,6,7)
+                            # Verificar que la fila tenga suficientes columnas
+                            if len(row) > 5:
+                                try:
+                                    # La columna 5 (índice 4) puede tener código o título de bloque
+                                    # La columna 6 (índice 5) tiene el nombre
+                                    codigo_val = row[4]
+                                    nombre_val = row[5]
+                                    
+                                    # Solo procesar si hay un código válido (no None, no vacío)
+                                    if codigo_val is not None:
+                                        codigo = str(codigo_val).strip()
+                                        nombre = str(nombre_val).strip() if nombre_val else ''
+                                        
+                                        # Saltar títulos de bloque (como "Patrimonio", "Pasivo Corriente", etc.)
+                                        # Estos no empiezan con dígito
+                                        # Saltar subtotales que empiezan con "Total"
+                                        if codigo and not codigo.startswith('Total') and codigo[0].isdigit() and nombre:
+                                            filas.append({
+                                                'codigo': codigo,
+                                                'nombre': nombre,
+                                                'grupo': '',  # Se obtendrá del catálogo
+                                                'naturaleza': '',  # Se obtendrá del catálogo
+                                                'tipo_estado': 'BAL',
+                                                'debe': str(row[6]) if len(row) > 6 and row[6] is not None else '0',
+                                                'haber': str(row[7]) if len(row) > 7 and row[7] is not None else '0'
+                                            })
+                                except Exception as e:
+                                    # Log del error para debugging si es necesario
+                                    pass
+                    
+                    # Leer hoja EstadoResultados
+                    if 'EstadoResultados' in wb.sheetnames:
+                        ws_resultados = wb['EstadoResultados']
+                        # Empezar desde fila 3 (fila 1: leyenda, fila 2: encabezados, fila 3+: datos)
+                        for row in ws_resultados.iter_rows(min_row=3, values_only=True):
+                            # Saltar filas vacías o que sean subtotales
                             if not row[0] or not row[1]:
                                 continue
-                            # Saltar si es un subtotal (no tiene código numérico)
+                            # Saltar si es un subtotal o título de bloque (no tiene código numérico)
                             try:
                                 codigo = str(row[0]).strip()
                                 # Si el código no parece un código de cuenta, saltar
@@ -677,41 +779,15 @@ def catalogo_upload_csv(request):
                             except:
                                 continue
                             
-                            filas.append({
-                                'codigo': codigo,
-                                'nombre': str(row[1]).strip() if row[1] else '',
-                                'grupo': '',  # Se obtendrá del catálogo
-                                'naturaleza': '',  # Se obtendrá del catálogo
-                                'tipo_estado': 'BAL',
-                                'debe': str(row[2]) if row[2] is not None else '0',
-                                'haber': str(row[3]) if row[3] is not None else '0'
-                            })
-                    
-                    # Leer hoja EstadoResultados
-                    if 'EstadoResultados' in wb.sheetnames:
-                        ws_resultados = wb['EstadoResultados']
-                        for row in ws_resultados.iter_rows(min_row=3, values_only=True):  # Empezar desde fila 3
-                            # Saltar filas vacías o que sean subtotales
-                            if not row[0] or not row[1]:
-                                continue
-                            # Saltar si es un subtotal (no tiene código numérico)
-                            try:
-                                codigo = str(row[0]).strip()
-                                # Si el código no parece un código de cuenta, saltar
-                                if not codigo or not codigo[0].isdigit():
-                                    continue
-                            except:
-                                continue
-                            
-                            # Ahora la estructura es: Código, Cuenta, Debe, Haber, Total
+                            # Estructura: Código, Cuenta, Debe, Haber, Total
                             filas.append({
                                 'codigo': codigo,
                                 'nombre': str(row[1]).strip() if row[1] else '',
                                 'grupo': '',  # Se obtendrá del catálogo
                                 'naturaleza': '',  # Se obtendrá del catálogo
                                 'tipo_estado': 'RES',
-                                'debe': str(row[2]) if row[2] is not None else '0',  # Columna 3 (índice 2)
-                                'haber': str(row[3]) if row[3] is not None else '0'  # Columna 4 (índice 3)
+                                'debe': str(row[2]) if len(row) > 2 and row[2] is not None else '0',  # Columna 3 (índice 2)
+                                'haber': str(row[3]) if len(row) > 3 and row[3] is not None else '0'  # Columna 4 (índice 3)
                             })
                 
                 reader = filas
@@ -905,8 +981,8 @@ def catalogo_upload_csv(request):
                     messages.warning(request, f"Se procesaron {creados} filas, pero hubo {len(errores)} errores.")
                 else:
                     messages.success(request, f"Estados financieros cargados correctamente. {creados} registros procesados.")
-                # Redirigir al mapeo de cuentas
-                return redirect(f"{reverse('catalogo_mapeo', args=[catalogo.id_catalogo])}")
+                # Redirigir a los detalles de la empresa en lugar del mapeo
+                return redirect('empresa_detalles', empresa_nit=empresa.nit)
                 
         except Exception as e:
             messages.error(request, f"Error al procesar el archivo: {str(e)}")
@@ -1325,3 +1401,49 @@ def set_active_company(request, empresa_nit):
     if referer:
         return HttpResponseRedirect(referer)
     return redirect('dashboard')
+
+
+@login_required
+def get_periodos_api(request):
+    """
+    API que devuelve los períodos disponibles para una empresa según el tipo de estado.
+    Solo devuelve períodos que tienen balances del tipo especificado.
+    """
+    try:
+        empresa_id = request.GET.get('empresa_id')
+        tipo_estado = request.GET.get('tipo_estado', 'RES')
+        
+        if not empresa_id:
+            return JsonResponse({'error': 'Falta parámetro empresa_id'}, status=400)
+        
+        # Verificar que la empresa pertenece al usuario (nit es la primary key)
+        empresa = get_object_or_404(
+            Empresa.objects.filter(usuario=request.user),
+            nit=empresa_id
+        )
+        
+        # Obtener períodos que tienen balances del tipo especificado
+        periodos = Periodo.objects.filter(
+            empresa=empresa,
+            balance__tipo_balance=tipo_estado
+        ).distinct().order_by('-anio', '-mes')
+        
+        periodos_data = []
+        for periodo in periodos:
+            periodo_str = f"{periodo.anio}"
+            if periodo.mes:
+                periodo_str += f"-{periodo.mes:02d}"
+            else:
+                periodo_str += " (Anual)"
+            
+            periodos_data.append({
+                'id': periodo.id_periodo,
+                'label': periodo_str,
+                'anio': periodo.anio,
+                'mes': periodo.mes,
+            })
+        
+        return JsonResponse({'periodos': periodos_data}, safe=False)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

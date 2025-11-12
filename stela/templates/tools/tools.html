@@ -12,6 +12,10 @@
     .dot-up   { background:#28a745; }  /* verde */
     .dot-down { background:#dc3545; }  /* rojo  */
     .dot-flat { background:#6c757d; }  /* gris  */
+    #periodo-base-select:disabled, #periodo-actual-select:disabled {
+      background-color: #e9ecef;
+      cursor: not-allowed;
+    }
   </style>
 {% endblock extra_head %}
 
@@ -28,28 +32,39 @@
   <div class="card mb-4">
     <div class="card-header">Parámetros</div>
     <div class="card-body">
-      <form class="row g-3" method="get" action="{% url 'tools_finanzas' %}">
+      <form class="row g-3" method="get" action="{% url 'tools_finanzas' %}" id="tools-form">
         <div class="col-md-3">
-          <label class="form-label">NIT / Empresa (pk)</label>
-          <input type="text" name="nit" class="form-control" value="{{ request.GET.nit|default:'' }}" placeholder="Ej. 0614...">
+          <label class="form-label">Empresa</label>
+          <select name="nit" id="empresa-select" class="form-select" required>
+            <option value="">-- Seleccione una empresa --</option>
+            {% if tiene_empresas %}
+              {% for emp in empresas %}
+                <option value="{{ emp.nit }}" {% if request.GET.nit == emp.nit|stringformat:"s" or empresa.nit == emp.nit %}selected{% endif %}>
+                  {{ emp.razon_social }} ({{ emp.nit }})
+                </option>
+              {% endfor %}
+            {% else %}
+              <option value="" disabled>-- No hay empresas disponibles --</option>
+            {% endif %}
+          </select>
+          {% if not tiene_empresas %}
+            <small class="text-muted d-block mt-1">No tienes empresas asociadas. <a href="{% url 'crear_empresa' %}">Crea una empresa primero</a>.</small>
+          {% endif %}
         </div>
-        <div class="col-md-3">
-          <label class="form-label">Estado</label>
-          <select name="estado" class="form-select">
-            <option value="RES" {% if estado == 'RES' %}selected{% endif %}>Resultados</option>
-            <option value="BAL" {% if estado == 'BAL' %}selected{% endif %}>Balance</option>
+        <div class="col-md-4">
+          <label class="form-label">Período base</label>
+          <select name="per_base" id="periodo-base-select" class="form-select">
+            <option value="">-- Opcional --</option>
           </select>
         </div>
         <div class="col-md-3">
-          <label class="form-label">Período base (ID)</label>
-          <input type="text" name="per_base" class="form-control" value="{{ request.GET.per_base|default:'' }}" placeholder="ID período base (opcional)">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Período actual (ID)</label>
-          <input type="text" name="per_act" class="form-control" value="{{ request.GET.per_act|default:'' }}" placeholder="ID período actual" required>
+          <label class="form-label">Período actual</label>
+          <select name="per_act" id="periodo-actual-select" class="form-select" required>
+            <option value="">-- Seleccione un período --</option>
+          </select>
         </div>
         <div class="col-12 d-flex gap-2">
-          <button class="btn btn-primary">Calcular</button>
+          <button type="submit" class="btn btn-primary">Calcular</button>
           <a class="btn btn-outline-secondary" href="{% url 'tools_finanzas' %}">Limpiar</a>
         </div>
       </form>
@@ -58,106 +73,16 @@
         <hr>
         <div class="small text-muted">
           <strong>Empresa:</strong> {{ empresa.razon_social|default:empresa.nit }} &middot;
-          <strong>Estado:</strong> {% if estado == 'RES' %}Resultados{% else %}Balance{% endif %} &middot;
           <strong>Período actual:</strong> {{ per_act }}
           {% if per_base_id %}&middot; <strong>Período base:</strong> #{{ per_base_id }}{% endif %}
+          &middot; <strong>Estados:</strong> Balance General y Estado de Resultados
         </div>
       {% endif %}
     </div>
   </div>
 
-  <!-- Sección: Análisis Vertical -->
-  <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span>Análisis Vertical</span>
-      <span class="text-muted small">
-        {% if per_base_id %}Comparando Base vs Actual{% else %}Período actual{% endif %}
-      </span>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-striped table-bordered table-sm m-0">
-          <thead class="table-light">
-            <tr>
-              <th>Cuenta / Línea</th>
-              {% if vertical_base %}<th class="text-end">Monto Base</th><th class="text-end">% Base</th>{% endif %}
-              <th class="text-end">Monto Actual</th>
-              <th class="text-end">% Actual</th>
-            </tr>
-          </thead>
-          <tbody>
-          {% if vertical_act %}
-            {% for a in vertical_act %}
-              {% with b=vertical_base|find_by_clave:a.clave %}
-              <tr>
-                <td>{{ a.nombre }}</td>
-                {% if vertical_base %}
-                  <td class="text-end">{% if b %}{{ b.monto }}{% else %}—{% endif %}</td>
-                  <td class="text-end">{% if b %}{{ b.porc|floatformat:2 }}%{% else %}—{% endif %}</td>
-                {% endif %}
-                <td class="text-end">{{ a.monto }}</td>
-                <td class="text-end">{{ a.porc|floatformat:2 }}%</td>
-              </tr>
-              {% endwith %}
-            {% endfor %}
-          {% else %}
-            <tr><td colspan="5" class="text-center py-4 text-muted">Sin datos aún. Elige una empresa y período.</td></tr>
-          {% endif %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sección: Análisis Horizontal -->
-  <div class="card mb-4">
-    <div class="card-header">Análisis Horizontal (Base vs Actual)</div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-striped table-bordered table-sm m-0">
-          <thead class="table-light">
-            <tr>
-              <th>Cuenta / Línea</th>
-              <th class="text-end">Base</th>
-              <th class="text-end">Actual</th>
-              <th class="text-end">Variación</th>
-              <th class="text-end">% Cambio</th>
-              <th class="text-center">Tendencia</th>
-            </tr>
-          </thead>
-          <tbody>
-          {% if horizontal_rows %}
-            {% for r in horizontal_rows %}
-              <tr>
-                <td>{{ r.nombre }}</td>
-                <td class="text-end">{{ r.base }}</td>
-                <td class="text-end">{{ r.actual }}</td>
-                <td class="text-end">{{ r.variacion }}</td>
-                <td class="text-end">
-                  {% if r.porc is not None %}{{ r.porc|floatformat:2 }}%{% else %}—{% endif %}
-                </td>
-                <td class="text-center">
-                  {% if r.porc is not None %}
-                    {% if r.porc > 0 %}<span class="badge-dot dot-up"></span>▲
-                    {% elif r.porc < 0 %}<span class="badge-dot dot-down"></span>▼
-                    {% else %}<span class="badge-dot dot-flat"></span>•
-                    {% endif %}
-                  {% else %}<span class="badge-dot dot-flat"></span>•
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-          {% else %}
-            <tr><td colspan="6" class="text-center py-4 text-muted">Para ver horizontal necesitas elegir también el período base.</td></tr>
-          {% endif %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
   <!-- Sección: Ratios y Benchmark -->
-  <div class="card">
+  <div class="card mb-4">
     <div class="card-header">Ratios (empresa) y Benchmark sector (CIIU)</div>
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -191,5 +116,268 @@
     </div>
   </div>
 
+  <!-- Sección: Análisis Vertical Estado de Resultados -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Análisis Vertical Estado de Resultados</span>
+      <span class="text-muted small">
+        {% if per_base_id %}Comparando Base vs Actual{% else %}Período actual{% endif %}
+      </span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm m-0">
+          <thead class="table-light">
+            <tr>
+              <th>Cuenta / Línea</th>
+              {% if vertical_base_res %}<th class="text-end">Monto Base</th><th class="text-end">% Base</th>{% endif %}
+              <th class="text-end">Monto Actual</th>
+              <th class="text-end">% Actual</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% if vertical_act_res %}
+            {% for a in vertical_act_res %}
+              {% with b=vertical_base_res|find_by_clave:a.clave %}
+              <tr>
+                <td>{{ a.nombre }}</td>
+                {% if vertical_base_res %}
+                  <td class="text-end">{% if b %}{{ b.monto }}{% else %}—{% endif %}</td>
+                  <td class="text-end">{% if b %}{{ b.porc|floatformat:2 }}%{% else %}—{% endif %}</td>
+                {% endif %}
+                <td class="text-end">{{ a.monto }}</td>
+                <td class="text-end">{{ a.porc|floatformat:2 }}%</td>
+              </tr>
+              {% endwith %}
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="5" class="text-center py-4 text-muted">Sin datos aún. Elige una empresa y período.</td></tr>
+          {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección: Análisis Vertical Balance General -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Análisis Vertical Balance General</span>
+      <span class="text-muted small">
+        {% if per_base_id %}Comparando Base vs Actual{% else %}Período actual{% endif %}
+      </span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm m-0">
+          <thead class="table-light">
+            <tr>
+              <th>Cuenta / Línea</th>
+              {% if vertical_base_bal %}<th class="text-end">Monto Base</th><th class="text-end">% Base</th>{% endif %}
+              <th class="text-end">Monto Actual</th>
+              <th class="text-end">% Actual</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% if vertical_act_bal %}
+            {% for a in vertical_act_bal %}
+              {% with b=vertical_base_bal|find_by_clave:a.clave %}
+              <tr>
+                <td>{{ a.nombre }}</td>
+                {% if vertical_base_bal %}
+                  <td class="text-end">{% if b %}{{ b.monto }}{% else %}—{% endif %}</td>
+                  <td class="text-end">{% if b %}{{ b.porc|floatformat:2 }}%{% else %}—{% endif %}</td>
+                {% endif %}
+                <td class="text-end">{{ a.monto }}</td>
+                <td class="text-end">{{ a.porc|floatformat:2 }}%</td>
+              </tr>
+              {% endwith %}
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="5" class="text-center py-4 text-muted">Sin datos aún. Elige una empresa y período.</td></tr>
+          {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección: Análisis Horizontal Estado de Resultados -->
+  <div class="card mb-4">
+    <div class="card-header">Análisis Horizontal Estado de Resultados (Base vs Actual)</div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm m-0">
+          <thead class="table-light">
+            <tr>
+              <th>Cuenta / Línea</th>
+              <th class="text-end">Base</th>
+              <th class="text-end">Actual</th>
+              <th class="text-end">Variación</th>
+              <th class="text-end">% Cambio</th>
+              <th class="text-center">Tendencia</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% if horizontal_rows_res %}
+            {% for r in horizontal_rows_res %}
+              <tr>
+                <td>{{ r.nombre }}</td>
+                <td class="text-end">{{ r.base }}</td>
+                <td class="text-end">{{ r.actual }}</td>
+                <td class="text-end">{{ r.variacion }}</td>
+                <td class="text-end">
+                  {% if r.porc is not None %}{{ r.porc|floatformat:2 }}%{% else %}—{% endif %}
+                </td>
+                <td class="text-center">
+                  {% if r.porc is not None %}
+                    {% if r.porc > 0 %}<span class="badge-dot dot-up"></span>▲
+                    {% elif r.porc < 0 %}<span class="badge-dot dot-down"></span>▼
+                    {% else %}<span class="badge-dot dot-flat"></span>•
+                    {% endif %}
+                  {% else %}<span class="badge-dot dot-flat"></span>•
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="6" class="text-center py-4 text-muted">Para ver horizontal necesitas elegir también el período base.</td></tr>
+          {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección: Análisis Horizontal Balance General -->
+  <div class="card mb-4">
+    <div class="card-header">Análisis Horizontal Balance General (Base vs Actual)</div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm m-0">
+          <thead class="table-light">
+            <tr>
+              <th>Cuenta / Línea</th>
+              <th class="text-end">Base</th>
+              <th class="text-end">Actual</th>
+              <th class="text-end">Variación</th>
+              <th class="text-end">% Cambio</th>
+              <th class="text-center">Tendencia</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% if horizontal_rows_bal %}
+            {% for r in horizontal_rows_bal %}
+              <tr>
+                <td>{{ r.nombre }}</td>
+                <td class="text-end">{{ r.base }}</td>
+                <td class="text-end">{{ r.actual }}</td>
+                <td class="text-end">{{ r.variacion }}</td>
+                <td class="text-end">
+                  {% if r.porc is not None %}{{ r.porc|floatformat:2 }}%{% else %}—{% endif %}
+                </td>
+                <td class="text-center">
+                  {% if r.porc is not None %}
+                    {% if r.porc > 0 %}<span class="badge-dot dot-up"></span>▲
+                    {% elif r.porc < 0 %}<span class="badge-dot dot-down"></span>▼
+                    {% else %}<span class="badge-dot dot-flat"></span>•
+                    {% endif %}
+                  {% else %}<span class="badge-dot dot-flat"></span>•
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="6" class="text-center py-4 text-muted">Para ver horizontal necesitas elegir también el período base.</td></tr>
+          {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const empresaSelect = document.getElementById('empresa-select');
+  const periodoBaseSelect = document.getElementById('periodo-base-select');
+  const periodoActualSelect = document.getElementById('periodo-actual-select');
+  
+  // Valores iniciales desde la URL
+  const initialEmpresa = '{{ request.GET.nit|default:"" }}';
+  const initialPerBase = '{{ request.GET.per_base|default:"" }}';
+  const initialPerAct = '{{ request.GET.per_act|default:"" }}';
+  
+  function cargarPeriodos(empresaId, periodoBaseId = null, periodoActualId = null) {
+    if (!empresaId) {
+      periodoBaseSelect.innerHTML = '<option value="">-- Opcional --</option>';
+      periodoActualSelect.innerHTML = '<option value="">-- Seleccione un período --</option>';
+      periodoBaseSelect.disabled = true;
+      periodoActualSelect.disabled = true;
+      return;
+    }
+    
+    periodoBaseSelect.disabled = true;
+    periodoActualSelect.disabled = true;
+    periodoBaseSelect.innerHTML = '<option value="">Cargando...</option>';
+    periodoActualSelect.innerHTML = '<option value="">Cargando...</option>';
+    
+    // Cargar períodos que tengan Balance (BAL) - ambos tipos de estado se calculan simultáneamente
+    const url = `{% url 'api_get_periodos' %}?empresa_id=${empresaId}&tipo_estado=BAL`;
+    
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        // Limpiar selectores
+        periodoBaseSelect.innerHTML = '<option value="">-- Opcional --</option>';
+        periodoActualSelect.innerHTML = '<option value="">-- Seleccione un período --</option>';
+        
+        if (data.periodos && data.periodos.length > 0) {
+          data.periodos.forEach(periodo => {
+            const optionBase = document.createElement('option');
+            optionBase.value = periodo.id;
+            optionBase.textContent = periodo.label;
+            if (periodoBaseId && periodo.id == periodoBaseId) {
+              optionBase.selected = true;
+            }
+            periodoBaseSelect.appendChild(optionBase);
+            
+            const optionActual = document.createElement('option');
+            optionActual.value = periodo.id;
+            optionActual.textContent = periodo.label;
+            if (periodoActualId && periodo.id == periodoActualId) {
+              optionActual.selected = true;
+            }
+            periodoActualSelect.appendChild(optionActual);
+          });
+          
+          periodoBaseSelect.disabled = false;
+          periodoActualSelect.disabled = false;
+        } else {
+          periodoBaseSelect.innerHTML = '<option value="">-- Sin períodos disponibles --</option>';
+          periodoActualSelect.innerHTML = '<option value="">-- Sin períodos disponibles --</option>';
+        }
+      })
+      .catch(error => {
+        console.error('Error al cargar períodos:', error);
+        periodoBaseSelect.innerHTML = '<option value="">-- Error al cargar --</option>';
+        periodoActualSelect.innerHTML = '<option value="">-- Error al cargar --</option>';
+      });
+  }
+  
+  function actualizarPeriodos() {
+    const empresaId = empresaSelect.value;
+    cargarPeriodos(empresaId);
+  }
+  
+  // Event listeners
+  empresaSelect.addEventListener('change', actualizarPeriodos);
+  
+  // Cargar períodos iniciales si hay empresa seleccionada
+  if (initialEmpresa) {
+    cargarPeriodos(initialEmpresa, initialPerBase, initialPerAct);
+  }
+});
+</script>
 {% endblock content %}

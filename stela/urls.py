@@ -43,4 +43,5 @@ urlpatterns = [
 
     path('api/get-chart-data/', views.get_chart_data_api, name='api_get_chart_data'),
     path('set-active-company/<str:empresa_nit>/', views.set_active_company, name='set_active_company'),
+    path('api/get-periodos/', views.get_periodos_api, name='api_get_periodos'),
 ]

@@ -99,7 +99,8 @@ def estado_dict(empresa, periodo, tipo_estado):
     3. Para cada LineaEstado del tipo especificado:
        - Busca todas las cuentas mapeadas (MapeoCuentaLinea)
        - Suma los saldos de esas cuentas (aplicando el signo del mapeo)
-    4. Devuelve un diccionario con las claves de línea y sus valores
+    4. Si no hay mapeos, calcula directamente desde bloques (bg_bloque/er_bloque) o naturaleza
+    5. Devuelve un diccionario con las claves de línea y sus valores
     
     Este diccionario se usa luego para calcular ratios en calcular_y_guardar_ratios().
     
@@ -114,11 +115,12 @@ def estado_dict(empresa, periodo, tipo_estado):
     """
     bal = Balance.objects.get(empresa=empresa, periodo=periodo, tipo_balance=tipo_estado)
     # Pre-indexar detalle por cuenta para velocidad
-    detalles = BalanceDetalle.objects.filter(balance=bal).select_related('cuenta')
+    detalles = BalanceDetalle.objects.filter(balance=bal).select_related('cuenta', 'cuenta__grupo')
     by_cuenta = {d.cuenta_id: d for d in detalles}
     data = {}
     for le in LineaEstado.objects.filter(estado=tipo_estado):
         total = Decimal('0')
+        tiene_mapeos = False
         
         # Si es UTILIDAD_NETA, calcular desde los bloques consolidados (er_bloque)
         if le.clave == 'UTILIDAD_NETA':
@@ -127,13 +129,41 @@ def estado_dict(empresa, periodo, tipo_estado):
             # que agrupa por er_bloque y calcula UTILIDAD_NETA automáticamente
             totales = calcular_totales_por_seccion(bal)
             total = totales.get('UTILIDAD_NETA', Decimal('0'))
+            tiene_mapeos = True
         else:
             # Para otras líneas, usar mapeos normales
-            for map_ in MapeoCuentaLinea.objects.filter(linea=le).only('cuenta_id','signo'):
+            mapeos = MapeoCuentaLinea.objects.filter(linea=le).only('cuenta_id','signo')
+            for map_ in mapeos:
                 det = by_cuenta.get(map_.cuenta_id)
                 if not det:
                     continue
                 total += (det.saldo or 0) * map_.signo
+                tiene_mapeos = True
+        
+        # Si no hay mapeos, calcular directamente desde bloques o naturaleza
+        if not tiene_mapeos and tipo_estado == 'BAL':
+            if le.clave == 'PATRIMONIO_TOTAL':
+                # Calcular patrimonio directamente desde cuentas con naturaleza 'Patrimonio'
+                for det in detalles:
+                    if det.cuenta.grupo.naturaleza == 'Patrimonio':
+                        total += det.saldo or Decimal('0')
+            elif le.clave == 'ACTIVO_CORRIENTE':
+                # Calcular desde bg_bloque
+                for det in detalles:
+                    if (det.cuenta.grupo.naturaleza == 'Activo' and 
+                        det.cuenta.bg_bloque == 'ACTIVO_CORRIENTE'):
+                        total += det.saldo or Decimal('0')
+            elif le.clave == 'PASIVO_CORRIENTE':
+                # Calcular desde bg_bloque
+                for det in detalles:
+                    if (det.cuenta.grupo.naturaleza == 'Pasivo' and 
+                        det.cuenta.bg_bloque == 'PASIVO_CORRIENTE'):
+                        total += det.saldo or Decimal('0')
+            elif le.clave == 'TOTAL_ACTIVO':
+                # Calcular sumando todos los activos
+                for det in detalles:
+                    if det.cuenta.grupo.naturaleza == 'Activo':
+                        total += det.saldo or Decimal('0')
         
         data[le.clave] = {'nombre': le.nombre, 'monto': total, 'base': le.base_vertical}
     return data

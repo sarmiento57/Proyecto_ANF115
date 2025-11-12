@@ -16,6 +16,13 @@ RATIOS = [
   ('LIQUIDEZ_CORRIENTE','Liquidez Corriente','(ACTIVO_CORRIENTE)/(PASIVO_CORRIENTE)', False),
   ('ENDEUDAMIENTO','Endeudamiento','(PASIVO_CORRIENTE)/(TOTAL_ACTIVO)', True),
   ('MARGEN_NETO','Margen Neto','(UTILIDAD_NETA)/(VENTAS_NETAS)', True),
+  ('ROA','Rentabilidad sobre Activos (ROA)','(UTILIDAD_NETA)/(TOTAL_ACTIVO)', True),
+  ('ROE','Rentabilidad sobre Patrimonio (ROE)','(UTILIDAD_NETA)/(PATRIMONIO_TOTAL)', True),
+  ('ROTACION_ACTIVOS','Rotación de Activos','(VENTAS_NETAS)/(TOTAL_ACTIVO)', False),
+  ('APALANCAMIENTO','Apalancamiento','(TOTAL_ACTIVO)/(PATRIMONIO_TOTAL)', False),
+  ('CAPITAL_TRABAJO','Capital de Trabajo','(ACTIVO_CORRIENTE)-(PASIVO_CORRIENTE)', False),
+  ('RAZON_ACTIVOS_CORRIENTES','Razón de Activos Corrientes','(ACTIVO_CORRIENTE)/(TOTAL_ACTIVO)', True),
+  ('RAZON_PATRIMONIO','Razón de Patrimonio','(PATRIMONIO_TOTAL)/(TOTAL_ACTIVO)', True),
 ]
 
 class Command(BaseCommand):

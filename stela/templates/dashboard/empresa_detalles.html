@@ -25,6 +25,10 @@
     padding: 0.75rem 0;
     border-top: 2px solid #366092;
   }
+  .balance-row-hidden,
+  .resultados-row-hidden {
+    display: none;
+  }
 </style>
 {% endblock %}
 
@@ -113,7 +117,7 @@
                 {% if balances.balance %}
                   {% with balance=balances.balance %}
                     <div class="table-responsive">
-                      <table class="table table-sm table-bordered">
+                      <table class="table table-sm table-bordered" id="balance-table-{{ balance.id_balance }}">
                         <thead class="table-light">
                           <tr>
                             <th>Cuenta</th>
@@ -121,8 +125,8 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {% for detalle in balance.detalles.all|slice:":10" %}
-                            <tr>
+                          {% for detalle in balance.detalles.all %}
+                            <tr class="{% if forloop.counter > 10 %}balance-row-hidden{% endif %}">
                               <td>{{ detalle.cuenta.nombre }}</td>
                               <td class="text-end">${{ detalle.saldo|floatformat:2 }}</td>
                             </tr>
@@ -135,7 +139,12 @@
                       </table>
                     </div>
                     {% if balance.detalles.count > 10 %}
-                      <p class="text-muted small mt-2">Mostrando 10 de {{ balance.detalles.count }} cuentas</p>
+                      <div class="d-flex justify-content-between align-items-center mt-2">
+                        <p class="text-muted small mb-0">Mostrando <span id="balance-visible-{{ balance.id_balance }}">10</span> de {{ balance.detalles.count }} cuentas</p>
+                        <button type="button" class="btn btn-sm btn-link p-0 text-primary" onclick="toggleBalanceRows('{{ balance.id_balance }}', {{ balance.detalles.count }})">
+                          <span id="balance-toggle-text-{{ balance.id_balance }}">Ver todas</span>
+                        </button>
+                      </div>
                     {% endif %}
                   {% endwith %}
                 {% else %}
@@ -158,7 +167,7 @@
                 {% if balances.resultados %}
                   {% with balance=balances.resultados %}
                     <div class="table-responsive">
-                      <table class="table table-sm table-bordered">
+                      <table class="table table-sm table-bordered" id="resultados-table-{{ balance.id_balance }}">
                         <thead class="table-light">
                           <tr>
                             <th>Cuenta</th>
@@ -166,8 +175,8 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {% for detalle in balance.detalles.all|slice:":10" %}
-                            <tr>
+                          {% for detalle in balance.detalles.all %}
+                            <tr class="{% if forloop.counter > 10 %}resultados-row-hidden{% endif %}">
                               <td>{{ detalle.cuenta.nombre }}</td>
                               <td class="text-end">${{ detalle.saldo|floatformat:2 }}</td>
                             </tr>
@@ -180,7 +189,12 @@
                       </table>
                     </div>
                     {% if balance.detalles.count > 10 %}
-                      <p class="text-muted small mt-2">Mostrando 10 de {{ balance.detalles.count }} cuentas</p>
+                      <div class="d-flex justify-content-between align-items-center mt-2">
+                        <p class="text-muted small mb-0">Mostrando <span id="resultados-visible-{{ balance.id_balance }}">10</span> de {{ balance.detalles.count }} cuentas</p>
+                        <button type="button" class="btn btn-sm btn-link p-0 text-primary" onclick="toggleResultadosRows('{{ balance.id_balance }}', {{ balance.detalles.count }})">
+                          <span id="resultados-toggle-text-{{ balance.id_balance }}">Ver todas</span>
+                        </button>
+                      </div>
                     {% endif %}
                   {% endwith %}
                 {% else %}
@@ -286,6 +300,64 @@
   // Inicializar iconos de Lucide
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
+  }
+
+  // Función para expandir/colapsar filas del Balance General
+  function toggleBalanceRows(balanceId, totalCount) {
+    const table = document.getElementById('balance-table-' + balanceId);
+    const hiddenRows = table.querySelectorAll('.balance-row-hidden');
+    const visibleSpan = document.getElementById('balance-visible-' + balanceId);
+    const toggleText = document.getElementById('balance-toggle-text-' + balanceId);
+    
+    // Si hay filas ocultas, expandir (mostrar todas)
+    if (hiddenRows.length > 0) {
+      hiddenRows.forEach(row => {
+        row.style.display = '';
+        row.classList.remove('balance-row-hidden');
+      });
+      visibleSpan.textContent = totalCount;
+      toggleText.textContent = 'Ver menos';
+    } else {
+      // Colapsar: ocultar filas después de la 10
+      const rows = table.querySelectorAll('tbody tr');
+      rows.forEach((row, index) => {
+        if (index >= 10) {
+          row.style.display = 'none';
+          row.classList.add('balance-row-hidden');
+        }
+      });
+      visibleSpan.textContent = '10';
+      toggleText.textContent = 'Ver todas';
+    }
+  }
+
+  // Función para expandir/colapsar filas del Estado de Resultados
+  function toggleResultadosRows(balanceId, totalCount) {
+    const table = document.getElementById('resultados-table-' + balanceId);
+    const hiddenRows = table.querySelectorAll('.resultados-row-hidden');
+    const visibleSpan = document.getElementById('resultados-visible-' + balanceId);
+    const toggleText = document.getElementById('resultados-toggle-text-' + balanceId);
+    
+    // Si hay filas ocultas, expandir (mostrar todas)
+    if (hiddenRows.length > 0) {
+      hiddenRows.forEach(row => {
+        row.style.display = '';
+        row.classList.remove('resultados-row-hidden');
+      });
+      visibleSpan.textContent = totalCount;
+      toggleText.textContent = 'Ver menos';
+    } else {
+      // Colapsar: ocultar filas después de la 10
+      const rows = table.querySelectorAll('tbody tr');
+      rows.forEach((row, index) => {
+        if (index >= 10) {
+          row.style.display = 'none';
+          row.classList.add('resultados-row-hidden');
+        }
+      });
+      visibleSpan.textContent = '10';
+      toggleText.textContent = 'Ver todas';
+    }
   }
 </script>
 {% endblock %}
