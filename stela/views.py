@@ -740,7 +740,7 @@ def ciiu_delete(request, codigo):
 
 # ========== VISTAS PARA CATÁLOGO DE CUENTAS ==========
 
-@access_required('008', stay_on_page=True)
+@access_required('050', stay_on_page=True)
 def catalogo_upload_csv(request):
     """
     Vista para cargar catálogo desde CSV.
@@ -1164,7 +1164,7 @@ def catalogo_upload_csv(request):
     return render(request, 'stela/catalogo/upload.html', context)
 
 
-@access_required('009', stay_on_page=True)
+@access_required('051', stay_on_page=True)
 def catalogo_create_manual(request):
     """
     Vista para crear catálogo manualmente.
@@ -1195,7 +1195,7 @@ def catalogo_create_manual(request):
     return render(request, 'stela/catalogo/create_manual.html', context)
 
 
-@access_required('010', stay_on_page=True)
+@access_required('052', stay_on_page=True)
 def catalogo_mapeo_cuentas(request, catalogo_id):
     """
     Vista para mapear cuentas a líneas de estado (para ratios).

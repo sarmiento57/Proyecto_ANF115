@@ -147,10 +147,7 @@ VALUES
 ('004', 'Perfil de usuario logueado', 4),
 ('005', 'Herramientas financieras', 5),
 ('006', 'Proyecciones de ventas (vista)', 6),
-('007', 'Listado de códigos CIIU', 7),
-('008', 'Carga de catálogo y estados financieros desde Excel', 8),
-('009', 'Crear catálogo manualmente', 9),
-('010', 'Mapeo de cuentas para ratios', 10);
+('007', 'Listado de códigos CIIU', 7);
 
 -- Insertar acciones internas
 INSERT INTO accounts_optionform (optionId, description, formNumber)
@@ -161,7 +158,10 @@ VALUES
 ('040', 'Calcular ratios y análisis financiero', 40),
 ('041', 'Crear Empresa', 41),
 ('042', 'Editar Empresa', 42),
-('043', 'Editar usuario logueado', 43);
+('043', 'Editar usuario logueado', 43),
+('050', 'Carga de catálogo y estados financieros desde Excel', 50),
+('051', 'Crear catálogo manualmente', 51),
+('052', 'Mapeo de cuentas para ratios', 52);
 
 -- Insertar accesos para usuarios con acceso completo (todas las opciones)
 INSERT INTO accounts_useraccess (userId_id, optionId_id, companyId_id)
@@ -182,9 +182,7 @@ VALUES
 (2, '004', '0614-010101-101-1'),
 (2, '005', '0614-010101-101-1'),
 (2, '006', '0614-010101-101-1'),
-(2, '007', '0614-010101-101-1'),
-(2, '009', '0614-010101-101-1'),
-(2, '010', '0614-010101-101-1');
+(2, '007', '0614-010101-101-1');
 
 -- Usuario 4 (Empresa A2)
 INSERT INTO accounts_useraccess (userId_id, optionId_id, companyId_id)
@@ -194,9 +192,7 @@ VALUES
 (4, '004', '0614-010102-102-2'),
 (4, '005', '0614-010102-102-2'),
 (4, '006', '0614-010102-102-2'),
-(4, '007', '0614-010102-102-2'),
-(4, '009', '0614-010102-102-2'),
-(4, '010', '0614-010102-102-2');
+(4, '007', '0614-010102-102-2');
 
 -- Usuario 6 (Empresa B1)
 INSERT INTO accounts_useraccess (userId_id, optionId_id, companyId_id)
@@ -206,9 +202,7 @@ VALUES
 (6, '004', '0614-020201-201-3'),
 (6, '005', '0614-020201-201-3'),
 (6, '006', '0614-020201-201-3'),
-(6, '007', '0614-020201-201-3'),
-(6, '009', '0614-020201-201-3'),
-(6, '010', '0614-020201-201-3');
+(6, '007', '0614-020201-201-3');
 
 -- Usuario 8 (Empresa B2)
 INSERT INTO accounts_useraccess (userId_id, optionId_id, companyId_id)
@@ -218,9 +212,7 @@ VALUES
 (8, '004', '0614-020202-202-4'),
 (8, '005', '0614-020202-202-4'),
 (8, '006', '0614-020202-202-4'),
-(8, '007', '0614-020202-202-4'),
-(8, '009', '0614-020202-202-4'),
-(8, '010', '0614-020202-202-4');
+(8, '007', '0614-020202-202-4');
 
 -- Ver Perfil de usuario
 INSERT INTO accounts_useraccess (userId_id, optionId_id, companyId_id)
