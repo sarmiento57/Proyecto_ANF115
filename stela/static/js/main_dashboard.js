@@ -1,5 +1,5 @@
-/* --- Paleta de Colores Nord --- */
-const nord = {
+/* --- Paleta de Colores Nord (Renombrada) --- */
+const nordPalette = {
   nord0: '#2e3440',
   nord1: '#3b4252',
   nord2: '#4c566a', // Fondo del gráfico
@@ -15,7 +15,7 @@ const nord = {
 };
 
 // Colores para las líneas del gráfico múltiple
-const chartColors = [nord.nord3, nord.nord8, nord.nord9, nord.nord10, nord.nord12, nord.nord13];
+const chartColors = [nordPalette.nord3, nordPalette.nord8, nordPalette.nord9, nordPalette.nord10, nordPalette.nord12, nordPalette.nord13];
 
 /* --- Plugin de Fondo --- */
 const backgroundPlugin = {
@@ -23,7 +23,7 @@ const backgroundPlugin = {
   beforeDraw(chart) {
     const { ctx, chartArea } = chart;
     ctx.save();
-    ctx.fillStyle = nord.nord2;
+    ctx.fillStyle = nordPalette.nord2;
     ctx.fillRect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
     ctx.restore();
   }
@@ -40,7 +40,7 @@ const noDataPlugin = {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.font = "bold 20px 'Lato', sans-serif";
-      ctx.fillStyle = nord.nord11; // Rojo Nord
+      ctx.fillStyle = nordPalette.nord11; // Rojo Nord
       ctx.fillText('NO DATA', width / 2, height / 2);
       ctx.restore();
     }
@@ -62,8 +62,8 @@ function makeChart(ctx, chartType) {
         legend: { display: true },
       },
       scales: {
-        x: { ticks: { color: nord.white }, grid: { color: nord.white, lineWidth: 0.2 } },
-        y: { ticks: { color: nord.white }, grid: { color: nord.white, lineWidth: 0.2 } }
+        x: { ticks: { color: nordPalette.white }, grid: { color: nordPalette.white, lineWidth: 0.2 } },
+        y: { ticks: { color: nordPalette.white }, grid: { color: nordPalette.white, lineWidth: 0.2 } }
       },
       onClick: (event, elements, chart) => {
         handleChartClick(chart, chartType);
@@ -96,6 +96,7 @@ async function loadChartData(chartInstance, type, itemIds = []) {
     params.append('type', type);
     itemIds.forEach(id => params.append('ids', id));
 
+    // URL corregida (sin prefijo /stela/)
     const response = await fetch(`/api/get-chart-data/?${params.toString()}`);
 
     if (!response.ok) {
@@ -130,16 +131,26 @@ async function showMultiSelectForm(chart, type, apiUrl) {
   modalBodyEl.innerHTML = '<p>Cargando...</p>';
   modalFooterEl.innerHTML = '';
 
+  // Definir la variable en el ámbito de la función
+  let checkboxesHTML = '';
+
   try {
     const response = await fetch(apiUrl);
-    const data = await response.json();
+
+    // Añadir la validación de error
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || `Error del servidor: ${response.status}`);
+    }
+
+    const data = await response.json(); // Ahora estamos seguros de que 'data' es un array
 
     if (data.length === 0) {
       modalBodyEl.innerHTML = '<p>No se encontraron opciones (¿Has cargado un catálogo?).</p>';
       return;
     }
 
-    let checkboxesHTML = data.map(item => {
+    checkboxesHTML = data.map(item => {
       const id = item.clave || item.id;
       const name = item.codigo ? `${item.codigo} - ${item.nombre}` : item.nombre;
       return `
@@ -150,8 +161,9 @@ async function showMultiSelectForm(chart, type, apiUrl) {
           </label>
         </div>`;
     }).join('');
-    modalBodyEl.innerHTML = `<div class="list-container" style="max-height: 300px; overflow-y: auto;">${checkboxHTML}</div>`;
 
+    // Mover estas líneas DENTRO del 'try'
+    modalBodyEl.innerHTML = `<div class="list-container" style="max-height: 300px; overflow-y: auto;">${checkboxesHTML}</div>`;
     modalFooterEl.innerHTML = '<button id="btn-plot-multi" class="btn btn-success">Graficar Seleccionados</button>';
 
     document.getElementById('btn-plot-multi').onclick = () => {
@@ -168,6 +180,7 @@ async function showMultiSelectForm(chart, type, apiUrl) {
   }
 }
 
+
 /* --- Pantalla de inicio para el gráfico 3 (Múltiple) --- */
 function showMultiSelectHome(chart) {
   modalTitleEl.textContent = 'Comparación Múltiple';
@@ -183,6 +196,7 @@ function showMultiSelectHome(chart) {
   modalFooterEl.innerHTML = '';
   chartModalInstance.show();
 
+  // URL corregida (sin prefijo /stela/)
   document.getElementById('btn-comp-cuentas').onclick = () => {
     showMultiSelectForm(chart, 'cuentas', '/api/get-cuentas/');
   };
@@ -200,6 +214,13 @@ async function showSingleSelect(chart, type, apiUrl) {
 
   try {
     const response = await fetch(apiUrl);
+
+    // Validación de respuesta
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || `Error del servidor: ${response.status}`);
+    }
+
     const data = await response.json();
 
     if (data.length === 0) {
@@ -209,6 +230,7 @@ async function showSingleSelect(chart, type, apiUrl) {
 
     const listGroup = document.createElement('div');
     listGroup.className = 'list-group';
+
     data.forEach(item => {
       const id = item.clave || item.id;
       const name = item.codigo ? `${item.codigo} - ${item.nombre}` : item.nombre;
@@ -241,6 +263,7 @@ function handleChartClick(chartInstance, chartType) {
     return;
   }
 
+  // URL corregida (sin prefijo /stela/)
   if (chartType === 'cuentas') {
     showSingleSelect(chartInstance, 'cuentas', '/api/get-cuentas/');
   } else if (chartType === 'ratios') {
@@ -250,7 +273,7 @@ function handleChartClick(chartInstance, chartType) {
   }
 }
 
-/* --- ¡MODIFICADO! DOMContentLoaded --- */
+/* --- DOMContentLoaded --- */
 window.addEventListener('DOMContentLoaded', () => {
   // 1. Inicializar referencias del Modal
   const modalEl = document.getElementById('chartOptionsModal');
@@ -269,9 +292,7 @@ window.addEventListener('DOMContentLoaded', () => {
   chart2 = makeChart(document.getElementById('chart-x2').getContext('2d'), 'ratios');
   chart3 = makeChart(document.getElementById('chart-x3').getContext('2d'), 'multi');
 
-  // 3. (Se eliminó la carga de datos por defecto)
-
-  // 4. Lógica de la tabla de catálogo (la dejé por si la usas en otra parte)
+  // 3. Lógica de la tabla de catálogo (opcional)
   const tableBody = document.querySelector('#catalog-table tbody');
   const catalogActions = document.getElementById('catalog-actions');
   const parentCard = catalogActions ? catalogActions.closest('.card') : null;
