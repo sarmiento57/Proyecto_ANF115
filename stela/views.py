@@ -39,6 +39,7 @@ from .forms.EmpresaForm import EmpresaForm,EmpresaEditForm
 from .models.empresa import Empresa
 from .models.finanzas import RatioDef, Periodo, ResultadoRatio, BalanceDetalle
 from .models.catalogo import Catalogo, Cuenta
+from django.db.models import F
 
 # Create your views here.
 def landing(request):
@@ -1281,10 +1282,15 @@ def get_cuentas_api(request):
         if not catalogo:
             return JsonResponse([], safe=False)
 
-        # Filtramos cuentas que pertenecen al catálogo de esa empresa
-        cuentas = Cuenta.objects.filter(grupo__catalogo=catalogo).values(
-            'id', 'codigo', 'nombre'
+        # --- ¡CAMBIO AQUÍ! ---
+        # Renombramos 'id_cuenta' (de la BD) a 'id' (para el JS)
+        cuentas = Cuenta.objects.filter(grupo__catalogo=catalogo).annotate(
+            id=F('id_cuenta')
+        ).values(
+            'id', 'codigo', 'nombre' # Esto ahora funciona gracias al annotate
         )
+        # --- FIN DEL CAMBIO ---
+
         return JsonResponse(list(cuentas), safe=False)
 
     except Exception as e:
@@ -1309,7 +1315,8 @@ def get_chart_data_api(request):
         if not active_nit:
             return JsonResponse({'error': 'No hay empresa activa seleccionada'}, status=404)
 
-        empresa = get_object_or_404(Empresa, nit=active_nit, usuario=request.user)
+        # Asumimos que la relación de usuario a empresa es 'usuario' (ManyToMany)
+        empresa = get_object_or_404(Empresa.objects.filter(usuario=request.user), nit=active_nit)
         # --- Fin de la obtención ---
 
         periodos = Periodo.objects.filter(empresa=empresa).order_by('anio', 'mes')
@@ -1320,7 +1327,7 @@ def get_chart_data_api(request):
         datasets = []
 
         if data_type == 'ratios':
-            # --- Lógica de Ratios (Completada) ---
+            # --- Lógica de Ratios ---
             for ratio_clave in item_ids:
                 try:
                     ratio_def = RatioDef.objects.get(clave=ratio_clave)
@@ -1343,10 +1350,12 @@ def get_chart_data_api(request):
                     pass  # Ignora si la clave del ratio es incorrecta
 
         elif data_type == 'cuentas':
-            # --- Lógica de Cuentas (Completada) ---
+            # --- Lógica de Cuentas (Corregida) ---
             for cuenta_id in item_ids:
                 try:
-                    cuenta = Cuenta.objects.get(id=cuenta_id)
+                    # ¡CORREGIDO! Buscamos por el nombre real del campo en la BD
+                    cuenta = Cuenta.objects.get(id_cuenta=cuenta_id)
+
                     # Validar que la cuenta pertenezca a la empresa activa
                     if cuenta.grupo.catalogo.empresa != empresa:
                         continue  # Esta cuenta no es de esta empresa
@@ -1372,8 +1381,8 @@ def get_chart_data_api(request):
         return JsonResponse({'labels': labels, 'datasets': datasets})
 
     except Exception as e:
+        # Devuelve el error de Django (como el de 'id' vs 'id_cuenta') al JS
         return JsonResponse({'error': str(e)}, status=500)
-
 
 @login_required
 def set_active_company(request, empresa_nit):

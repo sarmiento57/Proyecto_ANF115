@@ -6,17 +6,30 @@ from stela.models.finanzas import RatioDef, ResultadoRatio, Balance, BalanceDeta
 from stela.models.catalogo import Cuenta
 from .estados import estado_dict, calcular_totales_por_seccion
 
-OPS = {ast.Add: operator.add, ast.Sub: operator.sub,
-       ast.Mult: operator.mul, ast.Div: operator.truediv,
-       ast.USub: operator.neg}
+# Operadores permitidos en las fórmulas
+OPS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.USub: operator.neg,
+}
 
 def _eval(node):
-    if isinstance(node, ast.Num): return Decimal(str(node.n))
-    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub): return -_eval(node.operand)
-    if isinstance(node, ast.BinOp): return OPS[type(node.op)](_eval(node.left), _eval(node.right))
+    """Evalúa un AST con operaciones seguras (solo +, -, *, / y unarios)."""
+    if isinstance(node, ast.Num):  # números literales
+        return Decimal(str(node.n))
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        return -_eval(node.operand)
+    if isinstance(node, ast.BinOp):
+        return OPS[type(node.op)](_eval(node.left), _eval(node.right))
     raise ValueError("Expresión no soportada")
 
-def _replace_missing(expr):
+def _replace_missing(expr: str) -> str:
+    """
+    Si en la fórmula aparecen CLAVES que no están en cache,
+    las reemplazamos por (0) para evitar NameError.
+    """
     return re.sub(r'\b[A-Z_][A-Z0-9_]*\b', '(0)', expr)
 
 
@@ -243,6 +256,7 @@ def calcular_y_guardar_ratios(empresa, periodo, tipo_estado='RES'):
             expr = expr.replace(k, f'({m})')
         # Reemplazar claves faltantes con 0
         expr = _replace_missing(expr)
+
         try:
             # Verificar división por cero antes de evaluar
             # Buscar patrones de división como (X)/(Y) donde Y podría ser 0
@@ -276,7 +290,14 @@ def calcular_y_guardar_ratios(empresa, periodo, tipo_estado='RES'):
             except:
                 val = None
         ResultadoRatio.objects.update_or_create(
-            empresa=empresa, periodo=periodo, ratio=r, defaults={'valor': val}
+            empresa=empresa,
+            periodo=periodo,
+            ratio=r,
+            defaults={'valor': val}
         )
         resultados.append({'clave': r.clave, 'nombre': r.nombre, 'valor': val})
+
     return resultados
+
+# Alias por compatibilidad (si en algún lado lo llamaste así):
+

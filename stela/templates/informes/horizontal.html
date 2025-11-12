@@ -1,0 +1,27 @@
+{% extends "stela/base.html" %}
+{% block content %}
+<h3>Análisis Horizontal — {{ empresa.razon_social }} ({{ estado }}) {{ base.anio }} → {{ actual.anio }}</h3>
+<table class="table table-sm">
+  <thead><tr>
+    <th>Clave</th><th>Nombre</th>
+    <th class="text-end">{{ base.anio }}</th>
+    <th class="text-end">{{ actual.anio }}</th>
+    <th class="text-end">Variación</th>
+    <th class="text-end">% Var</th>
+  </tr></thead>
+  <tbody>
+  {% for f in filas %}
+    <tr>
+      <td>{{ f.clave }}</td>
+      <td>{{ f.nombre }}</td>
+      <td class="text-end">{{ f.base|floatformat:2 }}</td>
+      <td class="text-end">{{ f.actual|floatformat:2 }}</td>
+      <td class="text-end">{{ f.variacion|floatformat:2 }}</td>
+      <td class="text-end">
+        {% if f.porc is not None %}{{ f.porc|floatformat:2 }}%{% else %}—{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
