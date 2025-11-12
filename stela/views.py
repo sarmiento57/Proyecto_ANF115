@@ -268,23 +268,46 @@ def tools_finanzas(request):
     }
     
     if not (nit and per_act_id):
-        messages.info(request, "Selecciona empresa y período para calcular.")
+        messages.info(request, "Selecciona empresa y período para consultar.")
         return render(request, "tools/tools.html", ctx)
 
     # se cambio por el nuevo campo many to many
     empresa = get_object_or_404(Empresa.objects.filter(usuario=request.user), nit=nit)
     p_act   = get_object_or_404(Periodo, pk=per_act_id)
 
-    # Calcular ratios usando ambos tipos de estado
-    ratios_bal = calcular_y_guardar_ratios(empresa, p_act, tipo_estado='BAL')
-    ratios_res = calcular_y_guardar_ratios(empresa, p_act, tipo_estado='RES')
-    # Combinar ratios (evitar duplicados)
+    # CONSULTAR ratios ya calculados desde ResultadoRatio (no calcular)
+    # Los ratios se calculan automáticamente al cargar estados financieros
+    ratios_guardados = ResultadoRatio.objects.filter(
+        empresa=empresa,
+        periodo=p_act
+    ).select_related('ratio')
+    
+    # Convertir a formato de diccionario para compatibilidad con código existente
     ratios_dict = {}
-    for r in ratios_bal + ratios_res:
-        if r['clave'] not in ratios_dict:
-            ratios_dict[r['clave']] = r
-        elif r['valor'] is not None:
-            ratios_dict[r['clave']] = r
+    for rr in ratios_guardados:
+        clave = rr.ratio.clave
+        if clave not in ratios_dict or (rr.valor is not None and ratios_dict[clave]['valor'] is None):
+            ratios_dict[clave] = {
+                'clave': clave,
+                'nombre': rr.ratio.nombre,
+                'valor': rr.valor
+            }
+    
+    # Si no hay ratios guardados, intentar calcular en tiempo real como respaldo
+    if not ratios_dict:
+        try:
+            ratios_bal = calcular_y_guardar_ratios(empresa, p_act, tipo_estado='BAL')
+            ratios_res = calcular_y_guardar_ratios(empresa, p_act, tipo_estado='RES')
+            for r in ratios_bal + ratios_res:
+                if r['clave'] not in ratios_dict:
+                    ratios_dict[r['clave']] = r
+                elif r['valor'] is not None:
+                    ratios_dict[r['clave']] = r
+            if ratios_dict:
+                messages.info(request, "Ratios calculados en tiempo real. Se recomienda cargar estados financieros para calcular ratios automáticamente.")
+        except Exception as e:
+            messages.warning(request, f"No se encontraron ratios calculados para este período. Error al calcular: {str(e)}")
+    
     ratios = list(ratios_dict.values())
 
     # Análisis Vertical - Estado de Resultados
@@ -307,19 +330,71 @@ def tools_finanzas(request):
         horizontal_rows_bal = analisis_horizontal(empresa, p_base, p_act, 'BAL')
         vertical_base_bal = analisis_vertical(empresa, p_base, 'BAL')
 
-    # Benchmark por CIIU
+    # Benchmark: Promedio histórico de la misma empresa (todos los períodos)
     ratios_bench = []
-    if getattr(empresa, 'idCiiu_id', None) or getattr(empresa, 'ciiu', None):
-        ciiu_obj = getattr(empresa, 'ciiu', None) or getattr(empresa, 'idCiiu', None)
-        if ciiu_obj:
-            bench = benchmarking_por_ciiu(ciiu_obj, p_act)
-            for r in ratios:
-                b = bench.get(r['clave'])
-                if b:
-                    sem = etiqueta_semaforo(r['valor'], b['promedio'], b['desv'])
-                    ratios_bench.append({**r, **b, 'semaforo': sem})
+    from decimal import Decimal
+    from statistics import mean, pstdev
+    
+    # Obtener todos los períodos de la empresa con ratios calculados
+    periodos_empresa = Periodo.objects.filter(
+        empresa=empresa,
+        resultadoratio__isnull=False
+    ).distinct()
+    
+    for r in ratios:
+        # Buscar el ratio definido
+        try:
+            ratio_def = RatioDef.objects.get(clave=r['clave'])
+        except RatioDef.DoesNotExist:
+            continue
+        
+        # Obtener todos los valores históricos de este ratio para la empresa
+        valores_historicos = list(
+            ResultadoRatio.objects.filter(
+                empresa=empresa,
+                ratio=ratio_def,
+                periodo__in=periodos_empresa,
+                valor__isnull=False
+            ).values_list('valor', flat=True)
+        )
+        
+        if valores_historicos and len(valores_historicos) > 0:
+            # Calcular promedio y desviación estándar
+            valores_decimal = [Decimal(str(v)) for v in valores_historicos]
+            prom_historico = Decimal(mean(valores_decimal))
+            desv_historico = Decimal(pstdev(valores_decimal)) if len(valores_decimal) > 1 else Decimal('0')
+            
+            # Comparar valor actual con promedio histórico
+            valor_actual = r.get('valor')
+            if valor_actual is not None:
+                # Calcular semáforo comparando valor actual vs promedio histórico
+                if desv_historico == 0:
+                    sem = 'OK' if valor_actual == prom_historico else ('ALTO' if valor_actual > prom_historico else 'BAJO')
                 else:
-                    ratios_bench.append({**r, 'promedio': None, 'desv': None, 'semaforo': 'NA'})
+                    k = Decimal('1')
+                    if valor_actual > prom_historico + k * desv_historico:
+                        sem = 'ALTO'
+                    elif valor_actual < prom_historico - k * desv_historico:
+                        sem = 'BAJO'
+                    else:
+                        sem = 'OK'
+            else:
+                sem = 'NA'
+            
+            ratios_bench.append({
+                **r,
+                'promedio': prom_historico,
+                'desv': desv_historico,
+                'semaforo': sem
+            })
+        else:
+            # Si no hay valores históricos, mostrar solo el valor actual
+            ratios_bench.append({
+                **r,
+                'promedio': None,
+                'desv': None,
+                'semaforo': 'NA'
+            })
 
     # Comparación con parámetros de sector (ratios digitados)
     ratios_sector = []
@@ -978,6 +1053,20 @@ def catalogo_upload_csv(request):
             if paso == '3':
                 for balance in balances_por_tipo.values():
                     recalcular_saldos_detalle(balance)
+                
+                # Calcular ratios automáticamente después de cargar estados financieros
+                if periodo:
+                    try:
+                        # Calcular ratios para ambos tipos de estado
+                        ratios_bal = calcular_y_guardar_ratios(empresa, periodo, tipo_estado='BAL')
+                        ratios_res = calcular_y_guardar_ratios(empresa, periodo, tipo_estado='RES')
+                        # Contar ratios calculados con valores
+                        num_ratios = len([r for r in ratios_bal + ratios_res if r['valor'] is not None])
+                        if num_ratios > 0:
+                            messages.info(request, f"Ratios calculados automáticamente: {num_ratios} ratios procesados para el período {periodo.anio}.")
+                    except Exception as e:
+                        # No bloquear si falla el cálculo de ratios, solo mostrar advertencia
+                        messages.warning(request, f"Estados financieros cargados correctamente, pero hubo un error al calcular ratios: {str(e)}")
             
             if paso == '2':
                 # Paso 2: Solo catálogo (sin debe/haber)
@@ -1549,10 +1638,21 @@ def ratios_series_json(request):
                         periodo=p,
                         ratio=ratio_def
                     ).first()
+                    
                     if r_res and r_res.valor is not None:
+                        # Usar valor guardado (más rápido)
                         valores.append(float(r_res.valor))
                     else:
-                        valores.append(None)
+                        # Calcular en tiempo real si no está guardado (respaldo)
+                        try:
+                            ratios_calc = calcular_y_guardar_ratios(empresa, p, tipo_estado='RES')
+                            ratio_encontrado = next((r for r in ratios_calc if r['clave'] == ratio_clave), None)
+                            if ratio_encontrado and ratio_encontrado['valor'] is not None:
+                                valores.append(float(ratio_encontrado['valor']))
+                            else:
+                                valores.append(None)
+                        except Exception:
+                            valores.append(None)
                 
                 series[ratio_clave] = {
                     'nombre': ratio_def.nombre,

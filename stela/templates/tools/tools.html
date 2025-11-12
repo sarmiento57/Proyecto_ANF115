@@ -64,7 +64,7 @@
           </select>
         </div>
         <div class="col-12 d-flex gap-2">
-          <button type="submit" class="btn btn-primary">Calcular</button>
+          <button type="submit" class="btn btn-primary">Consultar</button>
           <a class="btn btn-outline-secondary" href="{% url 'tools_finanzas' %}">Limpiar</a>
         </div>
       </form>
@@ -84,7 +84,7 @@
   <!-- Sección: Ratios y Benchmark -->
   <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <span>Ratios (empresa) y Benchmark sector (CIIU)</span>
+      <span>Ratios (empresa) - Comparación con Promedio Histórico</span>
       {% if empresa and puede_ver_graficas %}
         <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#ratiosGraficasModal" onclick="cargarGraficasRatios('{{ empresa.nit }}')">
           Ver Gráficas
@@ -97,10 +97,10 @@
           <thead class="table-light">
             <tr>
               <th>Ratio</th>
-              <th class="text-end">Valor empresa</th>
-              <th class="text-end">Prom. sector</th>
+              <th class="text-end">Valor actual</th>
+              <th class="text-end">Prom. histórico</th>
               <th class="text-end">Desv. estándar</th>
-              <th class="text-center">Semáforo</th>
+              <th class="text-center">Cumplimiento</th>
             </tr>
           </thead>
           <tbody>
@@ -111,7 +111,17 @@
                   <td class="text-end">{% if r.valor is not None %}{{ r.valor|floatformat:2 }}{% else %}—{% endif %}</td>
                   <td class="text-end">{% if r.promedio is not None %}{{ r.promedio|floatformat:2 }}{% else %}—{% endif %}</td>
                   <td class="text-end">{% if r.desv is not None %}{{ r.desv|floatformat:2 }}{% else %}—{% endif %}</td>
-                  <td class="text-center">{% if r.semaforo %}{{ r.semaforo }}{% else %}—{% endif %}</td>
+                  <td class="text-center">
+                    {% if r.semaforo == 'OK' %}
+                      <span class="badge bg-success">OK</span>
+                    {% elif r.semaforo == 'ALTO' %}
+                      <span class="badge bg-warning">ALTO</span>
+                    {% elif r.semaforo == 'BAJO' %}
+                      <span class="badge bg-danger">BAJO</span>
+                    {% else %}
+                      <span class="badge bg-secondary">N/A</span>
+                    {% endif %}
+                  </td>
                 </tr>
               {% endfor %}
             {% else %}
