@@ -87,4 +87,4 @@ def calcular_y_guardar_ratios(empresa, periodo, tipo_estado='RES'):
     return resultados
 
 # Alias por compatibilidad (si en algún lado lo llamaste así):
-calcular_y_guardar_ratios = calcular_ratios
+
