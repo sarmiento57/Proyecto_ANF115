@@ -91,7 +91,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'stela_db',
         'USER': 'root',
-        'PASSWORD': 'admin',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
     }

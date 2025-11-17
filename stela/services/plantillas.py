@@ -192,8 +192,15 @@ def generar_plantilla_catalogo_excel():
     for col in range(1, len(headers) + 1):
         ws.column_dimensions[get_column_letter(col)].width = 25
     
-    # Proteger hoja (pero permitir seleccionar celdas desbloqueadas)
+    # Proteger hoja (permitir insertar filas pero no columnas)
     ws.protection.sheet = True
+    ws.protection.insertRows = True  # Permitir insertar filas
+    ws.protection.insertColumns = False  # No permitir insertar columnas
+    ws.protection.formatCells = False  # No permitir formatear celdas protegidas
+    ws.protection.formatRows = False
+    ws.protection.formatColumns = False
+    ws.protection.deleteRows = True  # Permitir eliminar filas
+    ws.protection.deleteColumns = False  # No permitir eliminar columnas
     ws.protection.enable()
     
     # Guardar en memoria
