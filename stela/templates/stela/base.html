@@ -150,19 +150,20 @@
 <!-- Auto logout after inactivity -->
 <script>
   let timeout;
+  const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutos
 
   function resetTimer() {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
       document.getElementById('logout-form').submit();
-    }, 300000000); // 30 segundos
+    }, INACTIVITY_LIMIT);
   }
 
   window.onload = resetTimer;
-  document.onmousemove = resetTimer;
-  document.onkeypress = resetTimer;
-  document.onclick = resetTimer;
-  document.onscroll = resetTimer;
+  document.addEventListener('mousemove', resetTimer);
+  document.addEventListener('keypress', resetTimer);
+  document.addEventListener('click', resetTimer);
+  document.addEventListener('scroll', resetTimer);
 </script>
 
 {% block scripts %}{% endblock %}

@@ -23,7 +23,7 @@ from stela import views as stela_views
 
 urlpatterns = [
     # Redirect the root URL to 'stela/'
-    path('', lambda request: redirect('stela/dashboard', permanent=False)),
+    path('', lambda request: redirect('stela/', permanent=False)),
     
     path("accounts/", include("accounts.urls")),
     path('accounts/', include('django.contrib.auth.urls')),
