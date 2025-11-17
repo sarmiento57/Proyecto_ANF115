@@ -20,6 +20,22 @@ body {
   padding: 0;
 }
 
+/* Restablecer colores dentro de los modales para mejorar el contraste */
+.modal-content {
+    background-color: var(--nord6);
+    color: var(--nord0);
+}
+
+.modal-title,
+.modal-body,
+.modal-footer {
+    color: var(--nord0);
+}
+
+.modal-body p {
+    color: var(--nord0);
+}
+
 /* Step 2: Ensure the main wrapper element (e.g., a Django base template content area)
    also takes full height and uses Flexbox for main content layout.
    Assuming the catalog is inside a main content wrapper (e.g., #content-wrapper) */

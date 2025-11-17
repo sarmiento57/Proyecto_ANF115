@@ -129,7 +129,7 @@ def generar_plantilla_catalogo_csv():
 
 
 def generar_plantilla_catalogo_excel():
-    """Genera Excel con cuentas base para catálogo, con leyenda y protección."""
+    """Genera Excel con cuentas base para catálogo, con leyenda. Todas las celdas son editables."""
     wb = Workbook()
     
     # ===== Hoja de leyenda =====
@@ -142,8 +142,7 @@ def generar_plantilla_catalogo_excel():
     ws_info.append(["ER Bloque", "Subtítulo del Estado de Resultados al que suma la cuenta (VENTAS_NETAS, COSTO_NETO_VENTAS, GASTOS_OPERATIVOS, etc.)."])
     ws_info.append(["ratio_tag", "Etiqueta interna que el autogenerador de ratios espera. Se puede usar '-TAG' para restar (ej. -VENTAS_NETAS)."])
     ws_info.append([])
-    ws_info.append(["Nota", "Las columnas bloqueadas (Código, Nombre, Grupo, Naturaleza) no deben editarse. Añade nuevas cuentas debajo si lo necesitas."])
-    ws_info.append(["", "Las columnas editables son: BG Bloque, ER Bloque y Ratio Tag."])
+    ws_info.append(["Nota", "Todas las columnas son editables. Puedes modificar cualquier campo o añadir nuevas cuentas debajo si lo necesitas."])
     
     # Estilo para la leyenda
     for row in range(1, 8):
@@ -192,16 +191,8 @@ def generar_plantilla_catalogo_excel():
     for col in range(1, len(headers) + 1):
         ws.column_dimensions[get_column_letter(col)].width = 25
     
-    # Proteger hoja (permitir insertar filas pero no columnas)
-    ws.protection.sheet = True
-    ws.protection.insertRows = True  # Permitir insertar filas
-    ws.protection.insertColumns = False  # No permitir insertar columnas
-    ws.protection.formatCells = False  # No permitir formatear celdas protegidas
-    ws.protection.formatRows = False
-    ws.protection.formatColumns = False
-    ws.protection.deleteRows = True  # Permitir eliminar filas
-    ws.protection.deleteColumns = False  # No permitir eliminar columnas
-    ws.protection.enable()
+    # No proteger hoja - todas las celdas son editables
+    ws.protection.sheet = False
     
     # Guardar en memoria
     output = io.BytesIO()
